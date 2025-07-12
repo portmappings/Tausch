@@ -9,7 +9,6 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -103,25 +102,10 @@ public class ButtonListener implements Listener {
 	}
 	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onInventoryDrag(InventoryDragEvent event) {
-		// make sure the clicker is a player
-		if (!(event.getWhoClicked() instanceof Player)) return;
 		Player player = (Player) event.getWhoClicked();
-
-		// if this player does not currently have one of our menus open, ignore the event
-		if (!Menu.currentlyOpenedMenus.containsKey(player.getName())) return;
-
-		InventoryView view = event.getView();
-		int topSize = view.getTopInventory().getSize();   // raw slots 0 … topSize‑1
-
-    /*  Cancel ONLY if at least one of the dragged slots is in the top inventory.
-        event.getRawSlots() gives us the raw slot IDs affected by this drag.      */
-		boolean touchesTopInventory = event.getRawSlots()
-				.stream()
-				.anyMatch(slot -> slot < topSize);
-
-		if (touchesTopInventory) {
+		if (Menu.currentlyOpenedMenus.containsKey(player.getName())) {
 			event.setCancelled(true);
 		}
-		// else: do nothing – the drag stays allowed for the player’s own inventory
 	}
+
 }
