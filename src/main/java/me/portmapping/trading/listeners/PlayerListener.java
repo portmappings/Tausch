@@ -24,7 +24,6 @@ public class PlayerListener implements Listener {
 
         TradeMenu tradeMenu = (TradeMenu) TradeMenu.currentlyOpenedMenus.get(player.getName());
 
-
         if (event.getSlot() == event.getRawSlot()) return;
 
         ItemStack clickedItem = event.getCurrentItem();
@@ -33,24 +32,20 @@ public class PlayerListener implements Listener {
         event.setCancelled(true);
 
         TradeSession session = tradeMenu.getTradeSession();
-        boolean isSender = player.getUniqueId().equals(session.getSender());
 
-        if (isSender) {
-            session.getSenderItems().add(clickedItem.clone());
-        } else {
-            session.getTargetItems().add(clickedItem.clone());
+        // Use the addItem function from TradeSession
+        if (!session.addItem(player.getUniqueId(), clickedItem.clone())) {
+            player.sendMessage(CC.t("&cYou can't add more items to the trade!"));
+            return;
         }
-
-        session.setSenderConfirmed(false);
-        session.setTargetConfirmed(false);
 
         player.getInventory().setItem(event.getSlot(), null);
 
-        TradeMenu newTradeMenu  = new TradeMenu(session);
+        TradeMenu newTradeMenu = new TradeMenu(session);
         newTradeMenu.openMenu(player);
         Player other = Bukkit.getPlayer(session.getOther(player));
         if (other != null && other.isOnline()) {
-            tradeMenu.openMenu(other);
+            newTradeMenu.openMenu(other);
         }
     }
 
@@ -64,36 +59,41 @@ public class PlayerListener implements Listener {
 
         TradeMenu tradeMenu = (TradeMenu) TradeMenu.currentlyOpenedMenus.remove(quitter.getName());
         TradeSession session = tradeMenu.getTradeSession();
-        session.cancel();
+        session.cancelTrade();
 
         Player partner = Bukkit.getPlayer(session.getOther(quitter));
         if (partner != null && partner.isOnline()) {
-            partner.sendMessage(CC.t("&cTrade cancelled: the other player left the game."));
-            partner.closeInventory();
             TradeMenu.currentlyOpenedMenus.remove(partner.getName());
         }
     }
 
-//    @EventHandler
-//    public void onInventoryClose(InventoryCloseEvent event) {
-//        if (!(event.getPlayer() instanceof Player player)) {
-//            return;
-//        }
-//
-//        if (!TradeMenu.currentlyOpenedMenus.containsKey(player.getName())) {
-//            return;
-//        }
-//
-//        TradeMenu tradeMenu = (TradeMenu) TradeMenu.currentlyOpenedMenus.remove(player.getName());
-//        TradeSession session = tradeMenu.getTradeSession();
-//        session.cancel();
-//
-//        Player partner = Bukkit.getPlayer(session.getOther(player));
-//        if (partner != null && partner.isOnline()) {
-//            partner.sendMessage(CC.t("&cTrade cancelled: the other player closed the trade menu."));
-//            partner.closeInventory();
-//            TradeMenu.currentlyOpenedMenus.remove(partner.getName());
-//        }
-//    }
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (!(event.getPlayer() instanceof Player player)) {
+            return;
+        }
 
+        if (!TradeMenu.currentlyOpenedMenus.containsKey(player.getName())) {
+            return;
+        }
+
+        TradeMenu tradeMenu = (TradeMenu) TradeMenu.currentlyOpenedMenus.get(player.getName());
+
+        // Check if the menu was closed manually (not by the plugin)
+        if (!tradeMenu.isClosedByMenu()) {
+            // Player manually closed the menu (ESC key)
+            TradeMenu.currentlyOpenedMenus.remove(player.getName());
+            TradeSession session = tradeMenu.getTradeSession();
+            session.cancelTrade();
+
+            Player partner = Bukkit.getPlayer(session.getOther(player));
+            if (partner != null && partner.isOnline()) {
+                TradeMenu.currentlyOpenedMenus.remove(partner.getName());
+                partner.closeInventory(); // Close the partner's menu too
+                partner.sendMessage(CC.t("&cThe trade has been cancelled."));
+            }
+
+            player.sendMessage(CC.t("&cTrade cancelled."));
+        }
+    }
 }
