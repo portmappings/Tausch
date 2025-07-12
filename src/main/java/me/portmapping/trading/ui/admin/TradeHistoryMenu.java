@@ -29,6 +29,14 @@ public class TradeHistoryMenu extends PaginatedMenu {
     private boolean isLoaded = false;
     private boolean isLoading = false;
 
+    // Define slots for trade buttons (28 slots total)
+    private static final int[] TRADE_SLOTS = {
+            10, 11, 12, 13, 14, 15, 16,
+            19, 20, 21, 22, 23, 24, 25,
+            28, 29, 30, 31, 32, 33, 34,
+            37, 38, 39, 40, 41, 42, 43
+    };
+
     public TradeHistoryMenu(UUID targetUUID, String targetName) {
         this.targetUUID = targetUUID;
         this.targetName = targetName;
@@ -47,7 +55,7 @@ public class TradeHistoryMenu extends PaginatedMenu {
 
     @Override
     public int getMaxItemsPerPage(Player player) {
-        return 28;
+        return TRADE_SLOTS.length; // 28
     }
 
     @Override
@@ -55,7 +63,7 @@ public class TradeHistoryMenu extends PaginatedMenu {
         Map<Integer, Button> buttons = new HashMap<>();
 
         if (!isLoaded) {
-            // Show loading indicator
+            // Show loading indicator in the center slot
             buttons.put(13, new LoadingButton());
             return buttons;
         }
@@ -65,7 +73,7 @@ public class TradeHistoryMenu extends PaginatedMenu {
 
         for (int i = 0; i < maxItems && startIndex + i < allTrades.size(); i++) {
             Document trade = allTrades.get(startIndex + i);
-            buttons.put(i, new TradeHistoryButton(trade));
+            buttons.put(TRADE_SLOTS[i], new TradeHistoryButton(trade));
         }
 
         return buttons;
@@ -92,14 +100,12 @@ public class TradeHistoryMenu extends PaginatedMenu {
                         .sort(Sorts.descending("_id"))
                         .into(new ArrayList<>());
 
-                // Update on main thread
                 Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> {
                     allTrades.clear();
                     allTrades.addAll(trades);
                     isLoaded = true;
                     isLoading = false;
 
-                    // Refresh any open menus
                     refreshOpenMenus();
                 });
 
@@ -117,7 +123,6 @@ public class TradeHistoryMenu extends PaginatedMenu {
         for (Player player : Bukkit.getOnlinePlayers()) {
             Menu openMenu = Menu.currentlyOpenedMenus.get(player.getName());
             if (openMenu == this) {
-                // Only refresh menus that are this exact instance
                 openMenu(player);
             }
         }
@@ -144,7 +149,7 @@ public class TradeHistoryMenu extends PaginatedMenu {
             buttons.put(i * 9 + 8, new StaticButton(border));
         }
 
-        // Navigation buttons (only show if loaded and there are multiple pages)
+        // Navigation buttons (only show if loaded and multiple pages)
         if (isLoaded && getPages(player) > 1) {
             if (getPage() > 1) {
                 buttons.put(0, new PageButton(-1, this));
@@ -178,7 +183,6 @@ public class TradeHistoryMenu extends PaginatedMenu {
                 String senderName = "Unknown";
                 String targetName = "Unknown";
 
-
                 try {
                     OfflinePlayer senderPlayer = Bukkit.getOfflinePlayer(senderUUID);
                     if (senderPlayer != null) senderName = senderPlayer.getName();
@@ -196,7 +200,6 @@ public class TradeHistoryMenu extends PaginatedMenu {
                         .addToLore("&7Target: &f" + targetName)
                         .addToLore("");
 
-                // Add sender items
                 if (!session.getSenderItems().isEmpty()) {
                     builder.addToLore("&aSender Items:");
                     for (ItemStack item : session.getSenderItems()) {
@@ -211,7 +214,6 @@ public class TradeHistoryMenu extends PaginatedMenu {
 
                 builder.addToLore("");
 
-                // Add target items
                 if (!session.getTargetItems().isEmpty()) {
                     builder.addToLore("&bTarget Items:");
                     for (ItemStack item : session.getTargetItems()) {
@@ -249,7 +251,6 @@ public class TradeHistoryMenu extends PaginatedMenu {
                 String senderName = "Unknown";
                 String targetName = "Unknown";
 
-                // Try to get player names
                 try {
                     OfflinePlayer senderPlayer = Bukkit.getOfflinePlayer(senderUUID);
                     if (senderPlayer != null) senderName = senderPlayer.getName();
@@ -257,12 +258,10 @@ public class TradeHistoryMenu extends PaginatedMenu {
                     OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(targetUUID);
                     if (targetPlayer != null) targetName = targetPlayer.getName();
                 } catch (Exception e) {
-                    // Fallback to UUID if name lookup fails
                     senderName = senderUUID.toString().substring(0, 8);
                     targetName = targetUUID.toString().substring(0, 8);
                 }
 
-                // Open the detailed trade view menu
                 TradeViewMenu tradeViewMenu = new TradeViewMenu(session, senderName, targetName, TradeHistoryMenu.this);
                 tradeViewMenu.openMenu(player);
 

@@ -4,6 +4,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import me.portmapping.trading.Tausch;
+import me.portmapping.trading.ui.user.TradeMenu;
+import me.portmapping.trading.utils.ItemStackBsonUtil;
 import me.portmapping.trading.utils.chat.CC;
 import org.bson.Document;
 import org.bukkit.Bukkit;
@@ -17,6 +19,7 @@ import java.util.stream.Collectors;
 @Setter
 @RequiredArgsConstructor
 public class TradeSession {
+
 
     private final UUID sender;
     private final UUID target;
@@ -227,10 +230,10 @@ public class TradeSession {
         Player targetPlayer = Bukkit.getPlayer(target);
 
         if (senderPlayer != null) {
-            new me.portmapping.trading.ui.user.TradeMenu(this).openMenu(senderPlayer);
+            new TradeMenu(this).openMenu(senderPlayer);
         }
         if (targetPlayer != null) {
-            new me.portmapping.trading.ui.user.TradeMenu(this).openMenu(targetPlayer);
+            new TradeMenu(this).openMenu(targetPlayer);
         }
     }
 
@@ -313,33 +316,37 @@ public class TradeSession {
                 .append("senderConfirmed", senderConfirmed)
                 .append("targetConfirmed", targetConfirmed)
                 .append("senderItems", senderItems.stream()
-                        .map(is -> new Document(is.serialize()))
+                        .map(ItemStackBsonUtil::serializeItemStack)
                         .collect(Collectors.toList()))
                 .append("targetItems", targetItems.stream()
-                        .map(is -> new Document(is.serialize()))
+                        .map(ItemStackBsonUtil::serializeItemStack)
                         .collect(Collectors.toList()));
     }
 
     public static TradeSession fromBson(Document doc) {
         TradeSession session = new TradeSession(
                 UUID.fromString(doc.getString("sender")),
-                UUID.fromString(doc.getString("target")));
+                UUID.fromString(doc.getString("target"))
+        );
 
         session.senderConfirmed = doc.getBoolean("senderConfirmed", false);
         session.targetConfirmed = doc.getBoolean("targetConfirmed", false);
 
-        List<Document> senderDocs = doc.getList("senderItems", Document.class, List.of());
+        List<Document> senderDocs = doc.getList("senderItems", Document.class, Collections.emptyList());
         session.senderItems.addAll(
                 senderDocs.stream()
-                        .map(ItemStack::deserialize)
-                        .toList());
+                        .map(ItemStackBsonUtil::deserializeItemStack)
+                        .collect(Collectors.toList())
+        );
 
-        List<Document> targetDocs = doc.getList("targetItems", Document.class, List.of());
+        List<Document> targetDocs = doc.getList("targetItems", Document.class, Collections.emptyList());
         session.targetItems.addAll(
                 targetDocs.stream()
-                        .map(ItemStack::deserialize)
-                        .toList());
+                        .map(ItemStackBsonUtil::deserializeItemStack)
+                        .collect(Collectors.toList())
+        );
 
         return session;
     }
+
 }

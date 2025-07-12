@@ -1,5 +1,6 @@
 package me.portmapping.trading;
 
+import com.google.gson.Gson;
 import lombok.Getter;
 import me.portmapping.trading.database.MongoHandler;
 import me.portmapping.trading.listeners.PlayerListener;
@@ -13,6 +14,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class Tausch extends JavaPlugin {
     @Getter
     private static Tausch instance;
+    @Getter
+    private static final Gson gson = new Gson();
     private CommandManager commandManager;
     private TradeManager tradeManager;
     private FileConfig settingsConfig;
