@@ -4,6 +4,7 @@ import lombok.Getter;
 import me.portmapping.trading.listeners.PlayerListener;
 import me.portmapping.trading.manager.CommandManager;
 import me.portmapping.trading.manager.TradeManager;
+import me.portmapping.trading.utils.config.FileConfig;
 import me.portmapping.trading.utils.menu.ButtonListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -13,13 +14,15 @@ public final class Tausch extends JavaPlugin {
     private static Tausch instance;
     private CommandManager commandManager;
     private TradeManager tradeManager;
-
+    private FileConfig settingsConfig;
     @Override
     public void onEnable() {
         instance = this;
+        this.settingsConfig = new FileConfig(this, "settings.yml");
 
         this.commandManager = new CommandManager(this);
         this.tradeManager = new TradeManager(this);
+
 
         this.getServer().getPluginManager().registerEvents(new ButtonListener(), this);
         this.getServer().getPluginManager().registerEvents(new PlayerListener(), this);
