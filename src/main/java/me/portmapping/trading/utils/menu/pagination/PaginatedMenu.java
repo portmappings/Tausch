@@ -35,7 +35,7 @@ public abstract class PaginatedMenu extends Menu {
 	/**
 	 * @param player player viewing the inventory
 	 */
-	public final int getPages(Player player) {
+	public int getPages(Player player) {
 		int buttonAmount = getAllPagesButtons(player).size();
 
 		if (buttonAmount == 0) {
