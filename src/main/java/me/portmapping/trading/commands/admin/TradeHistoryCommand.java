@@ -11,6 +11,6 @@ public class TradeHistoryCommand {
     @Command("tradehistory")
     @CommandPermission("tausch.admin")
     public void onTradeHistoryCommand(Player self, @Named("target") OfflinePlayer target){
-        new TradeHistoryMenu(target.getUniqueId(), target.getName()).openMenu(self);
+        new TradeHistoryMenu(target.getUniqueId()).openMenu(self);
     }
 }

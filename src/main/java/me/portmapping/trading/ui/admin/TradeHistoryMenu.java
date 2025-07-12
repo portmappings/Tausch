@@ -1,321 +1,193 @@
 package me.portmapping.trading.ui.admin;
 
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Sorts;
-import lombok.Getter;
+import com.mongodb.client.FindIterable;
+import lombok.RequiredArgsConstructor;
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.model.TradeSession;
+import me.portmapping.trading.ui.admin.button.TradeHistoryButton;
+import me.portmapping.trading.utils.chat.CC;
 import me.portmapping.trading.utils.item.ItemBuilder;
 import me.portmapping.trading.utils.menu.Button;
-import me.portmapping.trading.utils.menu.Menu;
-import me.portmapping.trading.utils.menu.pagination.PageButton;
 import me.portmapping.trading.utils.menu.pagination.PaginatedMenu;
 import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
-@Getter
+@RequiredArgsConstructor
 public class TradeHistoryMenu extends PaginatedMenu {
 
-    private final UUID targetUUID;
-    private final String targetName;
-    private final List<Document> allTrades = new ArrayList<>();
-    private boolean isLoaded = false;
-    private boolean isLoading = false;
-
-    // Define slots for trade buttons (28 slots total)
-    private static final int[] TRADE_SLOTS = {
-            10, 11, 12, 13, 14, 15, 16,
-            19, 20, 21, 22, 23, 24, 25,
-            28, 29, 30, 31, 32, 33, 34,
-            37, 38, 39, 40, 41, 42, 43
-    };
-
-    public TradeHistoryMenu(UUID targetUUID, String targetName) {
-        this.targetUUID = targetUUID;
-        this.targetName = targetName;
-        loadAllTrades();
-    }
+    private final UUID targetPlayerId;
+    private final Map<Integer, TradeSession> tradeHistory = new ConcurrentHashMap<>();
+    private boolean isLoading = true;
 
     @Override
     public String getPrePaginatedTitle(Player player) {
-        return "Trade History: " + targetName;
-    }
-
-    @Override
-    public int getSize() {
-        return 54;
-    }
-
-    @Override
-    public int getMaxItemsPerPage(Player player) {
-        return TRADE_SLOTS.length; // 28
+        Player targetPlayer = Bukkit.getPlayer(targetPlayerId);
+        String targetName = targetPlayer != null ? targetPlayer.getName() : "Unknown";
+        return CC.t("&8Trade History: &7" + targetName);
     }
 
     @Override
     public Map<Integer, Button> getAllPagesButtons(Player player) {
         Map<Integer, Button> buttons = new HashMap<>();
 
-        if (!isLoaded) {
-            // Show loading indicator in the center slot
-            buttons.put(13, new LoadingButton());
+        if (isLoading) {
+            buttons.put(0, new Button() {
+                @Override
+                public ItemStack getButtonItem(Player player) {
+                    return new ItemBuilder(Material.HOPPER)
+                            .setDisplayName(CC.t("&6&lLoading..."))
+                            .setLore(Arrays.asList(
+                                    CC.t("&7Fetching trade history from database..."),
+                                    CC.t("&7Please wait a moment.")
+                            ))
+                            .build();
+                }
+            });
+
+            // Load data asynchronously
+            loadTradeHistoryAsync(player);
             return buttons;
         }
 
-        int maxItems = getMaxItemsPerPage(player);
-        int startIndex = (getPage() - 1) * maxItems;
+        if (tradeHistory.isEmpty()) {
+            buttons.put(0, new Button() {
+                @Override
+                public ItemStack getButtonItem(Player player) {
+                    return new ItemBuilder(Material.BARRIER)
+                            .setDisplayName(CC.t("&c&lNo Trade History"))
+                            .setLore(Arrays.asList(
+                                    CC.t("&7This player has no recorded trades."),
+                                    CC.t("&7Trades will appear here once completed.")
+                            ))
+                            .build();
+                }
+            });
+            return buttons;
+        }
 
-        for (int i = 0; i < maxItems && startIndex + i < allTrades.size(); i++) {
-            Document trade = allTrades.get(startIndex + i);
-            buttons.put(TRADE_SLOTS[i], new TradeHistoryButton(trade));
+        int index = 0;
+        for (Map.Entry<Integer, TradeSession> entry : tradeHistory.entrySet()) {
+            TradeSession session = entry.getValue();
+            buttons.put(index++, new TradeHistoryButton(session, targetPlayerId));
         }
 
         return buttons;
     }
 
-    @Override
-    public int getPages(Player player) {
-        if (!isLoaded || allTrades.isEmpty()) return 1;
-        return (int) Math.ceil(allTrades.size() / (double) getMaxItemsPerPage(player));
-    }
-
-    private void loadAllTrades() {
-        if (isLoading) return;
-
-        isLoading = true;
-
-        CompletableFuture.runAsync(() -> {
+    private void loadTradeHistoryAsync(Player viewer) {
+        Bukkit.getScheduler().runTaskAsynchronously(Tausch.getInstance(), () -> {
             try {
-                List<Document> trades = Tausch.getInstance().getMongoHandler().getTradeHistory()
-                        .find(Filters.or(
-                                Filters.eq("sender", targetUUID.toString()),
-                                Filters.eq("target", targetUUID.toString())
-                        ))
-                        .sort(Sorts.descending("_id"))
-                        .into(new ArrayList<>());
+                Document query = new Document("$or", Arrays.asList(
+                        new Document("sender", targetPlayerId.toString()),
+                        new Document("target", targetPlayerId.toString())
+                ));
 
+                FindIterable<Document> results = Tausch.getInstance()
+                        .getMongoHandler()
+                        .getTradeHistory()
+                        .find(query)
+                        .sort(new Document("_id", -1)) // Sort by newest first
+                        .limit(1000); // Limit to prevent memory issues
+
+                Map<Integer, TradeSession> loadedTrades = new HashMap<>();
+                int index = 0;
+
+                for (Document doc : results) {
+                    try {
+                        TradeSession session = TradeSession.fromBson(doc);
+                        loadedTrades.put(index++, session);
+                    } catch (Exception e) {
+                        // Skip invalid documents
+                        e.printStackTrace();
+                    }
+                }
+
+                // Switch back to main thread to update UI
                 Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> {
-                    allTrades.clear();
-                    allTrades.addAll(trades);
-                    isLoaded = true;
+                    tradeHistory.clear();
+                    tradeHistory.putAll(loadedTrades);
                     isLoading = false;
 
-                    refreshOpenMenus();
+                    // Reopen menu to show loaded data
+                    if (viewer.isOnline()) {
+                        openMenu(viewer);
+                    }
                 });
 
             } catch (Exception e) {
                 e.printStackTrace();
+
+                // Handle error on main thread
                 Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> {
                     isLoading = false;
-                    refreshOpenMenus();
+                    if (viewer.isOnline()) {
+                        viewer.sendMessage(CC.t("&cError loading trade history. Please try again."));
+                        viewer.closeInventory();
+                    }
                 });
             }
         });
-    }
-
-    private void refreshOpenMenus() {
-        for (Player player : Bukkit.getOnlinePlayers()) {
-            Menu openMenu = Menu.currentlyOpenedMenus.get(player.getName());
-            if (openMenu == this) {
-                openMenu(player);
-            }
-        }
     }
 
     @Override
     public Map<Integer, Button> getGlobalButtons(Player player) {
         Map<Integer, Button> buttons = new HashMap<>();
 
-        // Add border items
-        ItemStack border = new ItemBuilder(Material.GRAY_STAINED_GLASS_PANE)
+        // Add decorative border
+        ItemStack borderItem = new ItemBuilder(Material.GRAY_STAINED_GLASS_PANE)
                 .setDisplayName(" ")
                 .build();
 
-        // Top and bottom borders
-        for (int i = 0; i < 9; i++) {
-            buttons.put(i, new StaticButton(border));
-            buttons.put(i + 45, new StaticButton(border));
+        // Fill bottom row with decorative items
+        for (int i = 45; i < 54; i++) {
+            buttons.put(i, new Button() {
+                @Override
+                public ItemStack getButtonItem(Player player) {
+                    return borderItem;
+                }
+            });
         }
 
-        // Side borders
-        for (int i = 1; i < 5; i++) {
-            buttons.put(i * 9, new StaticButton(border));
-            buttons.put(i * 9 + 8, new StaticButton(border));
-        }
-
-        // Navigation buttons (only show if loaded and multiple pages)
-        if (isLoaded && getPages(player) > 1) {
-            if (getPage() > 1) {
-                buttons.put(0, new PageButton(-1, this));
+        // Add refresh button
+        buttons.put(49, new Button() {
+            @Override
+            public ItemStack getButtonItem(Player player) {
+                return new ItemBuilder(Material.EMERALD)
+                        .setDisplayName(CC.t("&a&lRefresh"))
+                        .setLore(Arrays.asList(
+                                CC.t("&7Click to refresh the trade history"),
+                                CC.t("&7and load any new trades.")
+                        ))
+                        .build();
             }
-            if (getPage() < getPages(player)) {
-                buttons.put(8, new PageButton(1, this));
-            }
-        }
 
-        // Info button
-        buttons.put(4, new InfoButton());
+            @Override
+            public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
+                tradeHistory.clear();
+                isLoading = true;
+                openMenu(player);
+            }
+        });
 
         return buttons;
     }
 
-    private class TradeHistoryButton extends Button {
-        private final Document tradeDoc;
-
-        public TradeHistoryButton(Document tradeDoc) {
-            this.tradeDoc = tradeDoc;
-        }
-
-        @Override
-        public ItemStack getButtonItem(Player player) {
-            try {
-                TradeSession session = TradeSession.fromBson(tradeDoc);
-
-                UUID senderUUID = UUID.fromString(tradeDoc.getString("sender"));
-                UUID targetUUID = UUID.fromString(tradeDoc.getString("target"));
-
-                String senderName = "Unknown";
-                String targetName = "Unknown";
-
-                try {
-                    OfflinePlayer senderPlayer = Bukkit.getOfflinePlayer(senderUUID);
-                    if (senderPlayer != null) senderName = senderPlayer.getName();
-
-                    OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(targetUUID);
-                    if (targetPlayer != null) targetName = targetPlayer.getName();
-                } catch (Exception e) {
-                    senderName = senderUUID.toString().substring(0, 8);
-                    targetName = targetUUID.toString().substring(0, 8);
-                }
-
-                ItemBuilder builder = new ItemBuilder(Material.PAPER)
-                        .setDisplayName("&eTrade Record")
-                        .addToLore("&7Sender: &f" + senderName)
-                        .addToLore("&7Target: &f" + targetName)
-                        .addToLore("");
-
-                if (!session.getSenderItems().isEmpty()) {
-                    builder.addToLore("&aSender Items:");
-                    for (ItemStack item : session.getSenderItems()) {
-                        if (item != null) {
-                            String itemName = item.getType().name().toLowerCase().replace("_", " ");
-                            builder.addToLore("  &7- &f" + item.getAmount() + "x " + itemName);
-                        }
-                    }
-                } else {
-                    builder.addToLore("&aSender Items: &cNone");
-                }
-
-                builder.addToLore("");
-
-                if (!session.getTargetItems().isEmpty()) {
-                    builder.addToLore("&bTarget Items:");
-                    for (ItemStack item : session.getTargetItems()) {
-                        if (item != null) {
-                            String itemName = item.getType().name().toLowerCase().replace("_", " ");
-                            builder.addToLore("  &7- &f" + item.getAmount() + "x " + itemName);
-                        }
-                    }
-                } else {
-                    builder.addToLore("&bTarget Items: &cNone");
-                }
-
-                builder.addToLore("");
-                builder.addToLore("&7Click to view detailed trade information");
-
-                return builder.build();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                return new ItemBuilder(Material.RED_STAINED_GLASS)
-                        .setDisplayName("&cError loading trade")
-                        .addToLore("&7" + e.getMessage())
-                        .build();
-            }
-        }
-
-        @Override
-        public void clicked(Player player, int slot, org.bukkit.event.inventory.ClickType clickType, int hotbarButton) {
-            try {
-                TradeSession session = TradeSession.fromBson(tradeDoc);
-
-                UUID senderUUID = UUID.fromString(tradeDoc.getString("sender"));
-                UUID targetUUID = UUID.fromString(tradeDoc.getString("target"));
-
-                String senderName = "Unknown";
-                String targetName = "Unknown";
-
-                try {
-                    OfflinePlayer senderPlayer = Bukkit.getOfflinePlayer(senderUUID);
-                    if (senderPlayer != null) senderName = senderPlayer.getName();
-
-                    OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(targetUUID);
-                    if (targetPlayer != null) targetName = targetPlayer.getName();
-                } catch (Exception e) {
-                    senderName = senderUUID.toString().substring(0, 8);
-                    targetName = targetUUID.toString().substring(0, 8);
-                }
-
-                TradeViewMenu tradeViewMenu = new TradeViewMenu(session, senderName, targetName, TradeHistoryMenu.this);
-                tradeViewMenu.openMenu(player);
-
-            } catch (Exception e) {
-                e.printStackTrace();
-                player.sendMessage("§cError opening trade details: " + e.getMessage());
-            }
-        }
+    @Override
+    public int getSize() {
+        return 54; // 6 rows
     }
 
-    private class InfoButton extends Button {
-        @Override
-        public ItemStack getButtonItem(Player player) {
-            ItemBuilder builder = new ItemBuilder(Material.BOOK)
-                    .setDisplayName("&eInfo")
-                    .addToLore("&7Player: &f" + targetName);
-
-            if (isLoaded) {
-                builder.addToLore("&7Total Trades: &f" + allTrades.size())
-                        .addToLore("&7Current Page: &f" + getPage() + "/" + getPages(player));
-            } else if (isLoading) {
-                builder.addToLore("&7Status: &eLoading...");
-            } else {
-                builder.addToLore("&7Status: &cFailed to load");
-            }
-
-            builder.addToLore("")
-                    .addToLore("&7Use the arrows to navigate");
-
-            return builder.build();
-        }
+    @Override
+    public int getMaxItemsPerPage(Player player) {
+        return 28; // 4 rows of 7 items (avoiding borders)
     }
 
-    private static class LoadingButton extends Button {
-        @Override
-        public ItemStack getButtonItem(Player player) {
-            return new ItemBuilder(Material.HOPPER)
-                    .setDisplayName("&eLoading trades...")
-                    .addToLore("&7Please wait while we fetch")
-                    .addToLore("&7the trade history.")
-                    .build();
-        }
-    }
 
-    private static class StaticButton extends Button {
-        private final ItemStack item;
-
-        public StaticButton(ItemStack item) {
-            this.item = item;
-        }
-
-        @Override
-        public ItemStack getButtonItem(Player player) {
-            return item;
-        }
-    }
 }
