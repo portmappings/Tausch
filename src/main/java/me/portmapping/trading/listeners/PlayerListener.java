@@ -7,7 +7,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -15,14 +14,17 @@ import org.bukkit.inventory.ItemStack;
 
 public class PlayerListener implements Listener {
 
+    private TradeMenu getActiveTradeMenu(Player p) {
+        Object menu = TradeMenu.currentlyOpenedMenus.get(p.getName());
+        return (menu instanceof TradeMenu tm) ? tm : null;
+    }
+
     @EventHandler
     public void onPlayerInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) return;
-        Player player = (Player) event.getWhoClicked();
+        if (!(event.getWhoClicked() instanceof Player player)) return;
 
-        if (!TradeMenu.currentlyOpenedMenus.containsKey(player.getName())) return;
-
-        TradeMenu tradeMenu = (TradeMenu) TradeMenu.currentlyOpenedMenus.get(player.getName());
+        TradeMenu tradeMenu = getActiveTradeMenu(player);
+        if (tradeMenu == null) return;
 
         if (event.getSlot() == event.getRawSlot()) return;
 
@@ -32,8 +34,6 @@ public class PlayerListener implements Listener {
         event.setCancelled(true);
 
         TradeSession session = tradeMenu.getTradeSession();
-
-        // Use the addItem function from TradeSession
         if (!session.addItem(player.getUniqueId(), clickedItem.clone())) {
             player.sendMessage(CC.t("&cYou can't add more items to the trade!"));
             return;
@@ -43,6 +43,7 @@ public class PlayerListener implements Listener {
 
         TradeMenu newTradeMenu = new TradeMenu(session);
         newTradeMenu.openMenu(player);
+
         Player other = Bukkit.getPlayer(session.getOther(player));
         if (other != null && other.isOnline()) {
             newTradeMenu.openMenu(other);
@@ -53,43 +54,37 @@ public class PlayerListener implements Listener {
     public void onPlayerQuit(PlayerQuitEvent event) {
         Player quitter = event.getPlayer();
 
-        if (!TradeMenu.currentlyOpenedMenus.containsKey(quitter.getName())) {
-            return;
-        }
+        TradeMenu tradeMenu = getActiveTradeMenu(quitter);
+        if (tradeMenu == null) return;
 
-        TradeMenu tradeMenu = (TradeMenu) TradeMenu.currentlyOpenedMenus.remove(quitter.getName());
         TradeSession session = tradeMenu.getTradeSession();
         session.cancelTrade();
+        TradeMenu.currentlyOpenedMenus.remove(quitter.getName());
 
         Player partner = Bukkit.getPlayer(session.getOther(quitter));
         if (partner != null && partner.isOnline()) {
             TradeMenu.currentlyOpenedMenus.remove(partner.getName());
+            partner.closeInventory();
         }
     }
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
-        if (!(event.getPlayer() instanceof Player player)) {
-            return;
-        }
+        if (!(event.getPlayer() instanceof Player player)) return;
 
-        if (!TradeMenu.currentlyOpenedMenus.containsKey(player.getName())) {
-            return;
-        }
+        TradeMenu tradeMenu = getActiveTradeMenu(player);
+        if (tradeMenu == null) return;
 
-        TradeMenu tradeMenu = (TradeMenu) TradeMenu.currentlyOpenedMenus.get(player.getName());
-
-        // Check if the menu was closed manually (not by the plugin)
         if (!tradeMenu.isClosedByMenu()) {
-            // Player manually closed the menu (ESC key)
             TradeMenu.currentlyOpenedMenus.remove(player.getName());
+
             TradeSession session = tradeMenu.getTradeSession();
             session.cancelTrade();
 
             Player partner = Bukkit.getPlayer(session.getOther(player));
             if (partner != null && partner.isOnline()) {
                 TradeMenu.currentlyOpenedMenus.remove(partner.getName());
-                partner.closeInventory(); // Close the partner's menu too
+                partner.closeInventory();
                 partner.sendMessage(CC.t("&cThe trade has been cancelled."));
             }
 
