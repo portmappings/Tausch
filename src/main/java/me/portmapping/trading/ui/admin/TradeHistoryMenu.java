@@ -93,29 +93,33 @@ public class TradeHistoryMenu extends PaginatedMenu {
                         .getMongoHandler()
                         .getTradeHistory()
                         .find(query)
-                        .sort(new Document("_id", -1)) // Sort by newest first
-                        .limit(1000); // Limit to prevent memory issues
+                        .limit(500);
 
-                Map<Integer, TradeSession> loadedTrades = new HashMap<>();
-                int index = 0;
+                List<TradeSession> loadedSessions = new ArrayList<>();
 
                 for (Document doc : results) {
                     try {
                         TradeSession session = TradeSession.fromBson(doc);
-                        loadedTrades.put(index++, session);
+                        loadedSessions.add(session);
                     } catch (Exception e) {
-                        // Skip invalid documents
-                        e.printStackTrace();
+                        e.printStackTrace(); // Log and skip invalid
                     }
                 }
 
-                // Switch back to main thread to update UI
+                loadedSessions.sort((s1, s2) -> Long.compare(s2.getCompletedAt(), s1.getCompletedAt()));
+
+                Map<Integer, TradeSession> loadedTrades = new LinkedHashMap<>();
+                int index = 0;
+                for (TradeSession session : loadedSessions) {
+                    loadedTrades.put(index++, session);
+                }
+
+
                 Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> {
                     tradeHistory.clear();
                     tradeHistory.putAll(loadedTrades);
                     isLoading = false;
 
-                    // Reopen menu to show loaded data
                     if (viewer.isOnline()) {
                         openMenu(viewer);
                     }
@@ -124,7 +128,6 @@ public class TradeHistoryMenu extends PaginatedMenu {
             } catch (Exception e) {
                 e.printStackTrace();
 
-                // Handle error on main thread
                 Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> {
                     isLoading = false;
                     if (viewer.isOnline()) {
@@ -135,6 +138,7 @@ public class TradeHistoryMenu extends PaginatedMenu {
             }
         });
     }
+
 
     @Override
     public Map<Integer, Button> getGlobalButtons(Player player) {

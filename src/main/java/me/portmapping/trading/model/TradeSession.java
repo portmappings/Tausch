@@ -32,6 +32,12 @@ public class TradeSession {
 
     private int countdown = 4;
 
+    /**
+     * Epoch milliseconds of when the trade was successfully completed.
+     * A value of {@code 0L} means the trade has not been completed yet or was cancelled.
+     */
+    private long completedAt = 0L;
+
     public static final int MAX_ITEMS_PER_PLAYER = 16;
 
     public UUID getOther(UUID playerId) {
@@ -103,13 +109,11 @@ public class TradeSession {
         Player senderPlayer = Bukkit.getPlayer(sender);
         Player targetPlayer = Bukkit.getPlayer(target);
 
-        // Cancel if either player is offline
         if (senderPlayer == null || targetPlayer == null) {
             cancelTrade();
             return false;
         }
 
-        // Cancel if not enough inventory space
         if (!InventoryUtil.hasInventorySpace(senderPlayer, targetItems) ||
                 !InventoryUtil.hasInventorySpace(targetPlayer, senderItems)) {
 
@@ -120,7 +124,6 @@ public class TradeSession {
             return false;
         }
 
-        // Execute trade
         Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> {
             senderPlayer.getInventory().addItem(targetItems.toArray(new ItemStack[0]));
             targetPlayer.getInventory().addItem(senderItems.toArray(new ItemStack[0]));
@@ -129,7 +132,8 @@ public class TradeSession {
             CC.sendMessage(senderPlayer, successMessage);
             CC.sendMessage(targetPlayer, successMessage);
 
-            // Save to database
+            completedAt = System.currentTimeMillis();
+
             Document tradeDoc = toBson();
             Bukkit.getScheduler().runTaskAsynchronously(
                     Tausch.getInstance(),
@@ -194,7 +198,8 @@ public class TradeSession {
                         .collect(Collectors.toList()))
                 .append("targetItems", targetItems.stream()
                         .map(ItemUtil::itemStackToBase64)
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList()))
+                .append("completedAt", completedAt);
     }
 
     public static TradeSession fromBson(Document doc) {
@@ -204,6 +209,7 @@ public class TradeSession {
 
         session.senderConfirmed = doc.getBoolean("senderConfirmed", false);
         session.targetConfirmed = doc.getBoolean("targetConfirmed", false);
+        session.completedAt     = doc.getLong("completedAt") != null ? doc.getLong("completedAt") : 0L;
 
         List<String> senderBase64 = doc.getList("senderItems", String.class, List.of());
         session.senderItems.addAll(
