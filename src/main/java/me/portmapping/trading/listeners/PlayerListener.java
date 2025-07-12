@@ -2,12 +2,15 @@ package me.portmapping.trading.listeners;
 
 import me.portmapping.trading.model.TradeSession;
 import me.portmapping.trading.ui.user.TradeMenu;
+import me.portmapping.trading.utils.chat.CC;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
 public class PlayerListener implements Listener {
@@ -22,13 +25,13 @@ public class PlayerListener implements Listener {
 
         TradeMenu tradeMenu = (TradeMenu) TradeMenu.currentlyOpenedMenus.get(player.getName());
 
-        // Ignore clicks inside the trade GUI
+
         if (event.getSlot() == event.getRawSlot()) return;
 
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem == null || clickedItem.getType().isAir()) return;
 
-        event.setCancelled(true); // Prevent item from actually moving
+        event.setCancelled(true);
 
         TradeSession session = tradeMenu.getTradeSession();
         boolean isSender = player.getUniqueId().equals(session.getSender());
@@ -43,10 +46,53 @@ public class PlayerListener implements Listener {
 
         player.getInventory().setItem(event.getSlot(), null);
 
-        tradeMenu.openMenu(player); // Update self
+        tradeMenu.openMenu(player);
         Player other = Bukkit.getPlayer(session.getOther(player));
         if (other != null && other.isOnline()) {
-            tradeMenu.openMenu(other); // Update other player
+            tradeMenu.openMenu(other);
         }
     }
+
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        Player quitter = event.getPlayer();
+
+        if (!TradeMenu.currentlyOpenedMenus.containsKey(quitter.getName())) {
+            return;
+        }
+
+        TradeMenu tradeMenu = (TradeMenu) TradeMenu.currentlyOpenedMenus.remove(quitter.getName());
+        TradeSession session = tradeMenu.getTradeSession();
+        session.cancel();
+
+        Player partner = Bukkit.getPlayer(session.getOther(quitter));
+        if (partner != null && partner.isOnline()) {
+            partner.sendMessage(CC.t("&cTrade cancelled: the other player left the game."));
+            partner.closeInventory();
+            TradeMenu.currentlyOpenedMenus.remove(partner.getName());
+        }
+    }
+
+//    @EventHandler
+//    public void onInventoryClose(InventoryCloseEvent event) {
+//        if (!(event.getPlayer() instanceof Player player)) {
+//            return;
+//        }
+//
+//        if (!TradeMenu.currentlyOpenedMenus.containsKey(player.getName())) {
+//            return;
+//        }
+//
+//        TradeMenu tradeMenu = (TradeMenu) TradeMenu.currentlyOpenedMenus.remove(player.getName());
+//        TradeSession session = tradeMenu.getTradeSession();
+//        session.cancel();
+//
+//        Player partner = Bukkit.getPlayer(session.getOther(player));
+//        if (partner != null && partner.isOnline()) {
+//            partner.sendMessage(CC.t("&cTrade cancelled: the other player closed the trade menu."));
+//            partner.closeInventory();
+//            TradeMenu.currentlyOpenedMenus.remove(partner.getName());
+//        }
+//    }
+
 }
