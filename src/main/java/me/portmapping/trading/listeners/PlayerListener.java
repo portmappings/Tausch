@@ -20,7 +20,6 @@ public class PlayerListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player)) return;
         Player player = (Player) event.getWhoClicked();
 
-        if (event.getClick() != ClickType.SHIFT_LEFT && event.getClick() != ClickType.SHIFT_RIGHT) return;
         if (!TradeMenu.currentlyOpenedMenus.containsKey(player.getName())) return;
 
         TradeMenu tradeMenu = (TradeMenu) TradeMenu.currentlyOpenedMenus.get(player.getName());
@@ -42,11 +41,13 @@ public class PlayerListener implements Listener {
             session.getTargetItems().add(clickedItem.clone());
         }
 
-        session.resetConfirmation();
+        session.setSenderConfirmed(false);
+        session.setTargetConfirmed(false);
 
         player.getInventory().setItem(event.getSlot(), null);
 
-        tradeMenu.openMenu(player);
+        TradeMenu newTradeMenu  = new TradeMenu(session);
+        newTradeMenu.openMenu(player);
         Player other = Bukkit.getPlayer(session.getOther(player));
         if (other != null && other.isOnline()) {
             tradeMenu.openMenu(other);
