@@ -62,21 +62,8 @@ public class TradeViewMenu extends Menu {
     }
 
     private void addDividerButtons(Map<Integer, Button> buttons) {
-        ItemStack divider = new ItemBuilder(Material.PURPLE_STAINED_GLASS_PANE)
-                .setDisplayName(CC.t("&5&l⬌ &d&lTrade Divider &5&l⬌"))
-                .setLore(Arrays.asList(
-                        CC.t("&7This divides the items that"),
-                        CC.t("&7were traded between players.")
-                ))
-                .build();
-
         for (int slot : DIVIDER_SLOTS) {
-            buttons.put(slot, new Button() {
-                @Override
-                public ItemStack getButtonItem(Player player) {
-                    return divider;
-                }
-            });
+            buttons.put(slot, Button.placeholder(Material.GRAY_STAINED_GLASS_PANE));
         }
     }
 
@@ -153,26 +140,16 @@ public class TradeViewMenu extends Menu {
     }
 
     private void addBorderButtons(Map<Integer, Button> buttons) {
-        ItemStack borderItem = new ItemBuilder(Material.GRAY_STAINED_GLASS_PANE)
-                .setDisplayName(" ")
-                .build();
-
-        // Add border to bottom row (except back and info buttons)
         for (int i = 45; i < 54; i++) {
             if (i != BACK_BUTTON_SLOT && i != INFO_BUTTON_SLOT) {
-                buttons.put(i, new Button() {
-                    @Override
-                    public ItemStack getButtonItem(Player player) {
-                        return borderItem;
-                    }
-                });
+                buttons.put(i, Button.placeholder(Material.GRAY_STAINED_GLASS_PANE));
             }
         }
     }
 
     @Override
     public int getSize() {
-        return 54; // 6 rows
+        return 54;
     }
 
     private static class StaticTradeItemButton extends Button {
@@ -190,30 +167,9 @@ public class TradeViewMenu extends Menu {
                 return new ItemStack(Material.AIR);
             }
 
-            // Clone the item to avoid modifying the original
             ItemStack displayItem = item.clone();
 
-            // Add trade information to the lore
-            List<String> lore = new ArrayList<>();
-            if (displayItem.hasItemMeta() && displayItem.getItemMeta().hasLore()) {
-                lore.addAll(displayItem.getItemMeta().getLore());
-                lore.add("");
-            }
-
-            lore.add(CC.t("&7━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
-            if (isViewerItem) {
-                lore.add(CC.t("&a&lItem Given Away"));
-                lore.add(CC.t("&7This item was traded away"));
-            } else {
-                lore.add(CC.t("&c&lItem Received"));
-                lore.add(CC.t("&7This item was received"));
-            }
-            lore.add(CC.t("&7━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"));
-
-            return new ItemBuilder(displayItem)
-                    .setLore(lore)
-                    .glowing(true)
-                    .build();
+            return displayItem;
         }
 
 //        @Override

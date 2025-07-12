@@ -1,9 +1,14 @@
 package me.portmapping.trading.ui.admin;
 
 import com.mongodb.client.FindIterable;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.model.TradeSession;
+import me.portmapping.trading.ui.admin.button.LoadingButton;
+import me.portmapping.trading.ui.admin.button.NoTradeHistoryButton;
+import me.portmapping.trading.ui.admin.button.RefreshButton;
 import me.portmapping.trading.ui.admin.button.TradeHistoryButton;
 import me.portmapping.trading.utils.chat.CC;
 import me.portmapping.trading.utils.item.ItemBuilder;
@@ -20,6 +25,8 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @RequiredArgsConstructor
+@Getter
+@Setter
 public class TradeHistoryMenu extends PaginatedMenu {
 
     private final UUID targetPlayerId;
@@ -38,18 +45,7 @@ public class TradeHistoryMenu extends PaginatedMenu {
         Map<Integer, Button> buttons = new HashMap<>();
 
         if (isLoading) {
-            buttons.put(0, new Button() {
-                @Override
-                public ItemStack getButtonItem(Player player) {
-                    return new ItemBuilder(Material.HOPPER)
-                            .setDisplayName(CC.t("&6&lLoading..."))
-                            .setLore(Arrays.asList(
-                                    CC.t("&7Fetching trade history from database..."),
-                                    CC.t("&7Please wait a moment.")
-                            ))
-                            .build();
-                }
-            });
+            buttons.put(0, new LoadingButton());
 
             // Load data asynchronously
             loadTradeHistoryAsync(player);
@@ -57,18 +53,7 @@ public class TradeHistoryMenu extends PaginatedMenu {
         }
 
         if (tradeHistory.isEmpty()) {
-            buttons.put(0, new Button() {
-                @Override
-                public ItemStack getButtonItem(Player player) {
-                    return new ItemBuilder(Material.BARRIER)
-                            .setDisplayName(CC.t("&c&lNo Trade History"))
-                            .setLore(Arrays.asList(
-                                    CC.t("&7This player has no recorded trades."),
-                                    CC.t("&7Trades will appear here once completed.")
-                            ))
-                            .build();
-                }
-            });
+            buttons.put(0,new NoTradeHistoryButton());
             return buttons;
         }
 
@@ -144,41 +129,12 @@ public class TradeHistoryMenu extends PaginatedMenu {
     public Map<Integer, Button> getGlobalButtons(Player player) {
         Map<Integer, Button> buttons = new HashMap<>();
 
-        // Add decorative border
-        ItemStack borderItem = new ItemBuilder(Material.GRAY_STAINED_GLASS_PANE)
-                .setDisplayName(" ")
-                .build();
-
-        // Fill bottom row with decorative items
         for (int i = 45; i < 54; i++) {
-            buttons.put(i, new Button() {
-                @Override
-                public ItemStack getButtonItem(Player player) {
-                    return borderItem;
-                }
-            });
+            buttons.put(i, Button.placeholder(Material.GRAY_STAINED_GLASS_PANE));
         }
 
         // Add refresh button
-        buttons.put(49, new Button() {
-            @Override
-            public ItemStack getButtonItem(Player player) {
-                return new ItemBuilder(Material.EMERALD)
-                        .setDisplayName(CC.t("&a&lRefresh"))
-                        .setLore(Arrays.asList(
-                                CC.t("&7Click to refresh the trade history"),
-                                CC.t("&7and load any new trades.")
-                        ))
-                        .build();
-            }
-
-            @Override
-            public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
-                tradeHistory.clear();
-                isLoading = true;
-                openMenu(player);
-            }
-        });
+        buttons.put(49, new RefreshButton(this));
 
         return buttons;
     }
