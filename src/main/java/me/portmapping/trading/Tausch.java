@@ -16,17 +16,20 @@ public final class Tausch extends JavaPlugin {
     private static Tausch instance;
     @Getter
     private static final Gson gson = new Gson();
+
+    private FileConfig settingsConfig;
+    private FileConfig messagesConfig;
+
     private CommandManager commandManager;
     private TradeManager tradeManager;
-    private FileConfig settingsConfig;
-
     private MongoHandler mongoHandler;
     @Override
     public void onEnable() {
         instance = this;
         this.settingsConfig = new FileConfig(this, "settings.yml");
-        this.mongoHandler = new MongoHandler(this);
+        this.messagesConfig = new FileConfig(this, "messages.yml");
 
+        this.mongoHandler = new MongoHandler(this);
         this.commandManager = new CommandManager(this);
         this.tradeManager = new TradeManager(this);
 
