@@ -40,7 +40,7 @@ public class ItemBuilder implements Cloneable {
     }
 
     public ItemBuilder setLore(List<String> lore) {
-        this.itemMeta.setLore(lore);
+        this.itemMeta.setLore(CC.t(lore));
         return this;
     }
 

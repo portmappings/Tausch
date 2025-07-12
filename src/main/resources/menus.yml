@@ -1,0 +1,102 @@
+loading-button:
+  material: HOPPER
+  display-name: "&6&lLoading..."
+  lore:
+    - "&7Fetching trade history from database..."
+    - "&7Please wait a moment."
+
+no-trade-history-button:
+  material: BARRIER
+  display-name: "&c&lNo Trade History"
+  lore:
+    - "&7This player has no recorded trades."
+    - "&7Trades will appear here once completed."
+
+refresh-button:
+  material: EMERALD
+  display-name: "&a&lRefresh"
+  lore:
+    - "&7Click to refresh the trade history"
+    - "&7and load any new trades."
+
+trade-history-button:
+  material: CHEST
+  display-name: "&6&lTrade with {other}"
+  lore:
+    - "&7━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    - "&7Traded with: &f{other}"
+    - ""
+    - "&7Your Items: &f{viewer_items}"
+    - "&7Their Items: &f{other_items}"
+    - ""
+    - "&6&lStatus: &a&lCompleted"
+    - ""
+    - "&7━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    - "&e&lClick to view detailed trade information!"
+  glow: true
+
+trade-view:
+  divider-material: GRAY_STAINED_GLASS_PANE
+  back-button:
+    material: ARROW
+    display-name: "&c&lBack"
+    lore:
+      - "&7Click to return to the"
+      - "&7trade history menu."
+  info-button:
+    material: BOOK
+    display-name: "&6&lTrade Information"
+    lore:
+      - "&7━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+      - "&6&lTrade Information:"
+      - ""
+      - "&7Player 1: &f{viewer}"
+      - "&7Player 2: &f{other}"
+      - ""
+      - "&a&lItems Given by {viewer}: &7({viewer_items})"
+      - "&c&lItems Given by {other}: &7({other_items})"
+      - ""
+      - "&6&lStatus: &a&lCompleted Successfully"
+      - "&7━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    glow: true
+
+input-button:
+  confirmed:
+    material: GREEN_TERRACOTTA
+    display-name: "&aDeal accepted!"
+    lore:
+      - "&7You are still waiting for the"
+      - "&7other side to accept"
+  countdown:
+    material: RED_TERRACOTTA
+    display-name: "&cWait {countdown} seconds"
+    lore:
+      - "&7Please check your items before accepting"
+      - "&7You must wait before confirming"
+      - "&7the trade after changes"
+  empty:
+    material: GRAY_TERRACOTTA
+    display-name: "&aTrading"
+    lore:
+      - "&7You need to click an item in your"
+      - "&7inventory to offer it for trade"
+  gift:
+    material: BLUE_TERRACOTTA
+    display-name: "&bGift!"
+    lore:
+      - "&7You are receiving items without"
+      - "&7offering anything in return"
+  warning:
+    material: ORANGE_TERRACOTTA
+    display-name: "&eWarning!"
+    lore:
+      - "&7You are offering items without"
+      - "&7getting anything in return"
+  deal:
+    material: LIME_TERRACOTTA
+    display-name: "&eDeal!"
+    lore:
+      - "&7Trades cannot be reverted!"
+      - "&7Make sure to review the trade"
+      - "&7before accepting"
+

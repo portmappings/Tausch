@@ -10,6 +10,8 @@ import me.portmapping.trading.utils.config.FileConfig;
 import me.portmapping.trading.utils.menu.ButtonListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+
 @Getter
 public final class Tausch extends JavaPlugin {
     @Getter
@@ -19,6 +21,7 @@ public final class Tausch extends JavaPlugin {
 
     private FileConfig settingsConfig;
     private FileConfig messagesConfig;
+    private FileConfig menusConfig;
 
     private CommandManager commandManager;
     private TradeManager tradeManager;
@@ -28,6 +31,7 @@ public final class Tausch extends JavaPlugin {
         instance = this;
         this.settingsConfig = new FileConfig(this, "settings.yml");
         this.messagesConfig = new FileConfig(this, "messages.yml");
+        this.menusConfig = new FileConfig(this, "menus.yml");
 
         this.mongoHandler = new MongoHandler(this);
         this.commandManager = new CommandManager(this);

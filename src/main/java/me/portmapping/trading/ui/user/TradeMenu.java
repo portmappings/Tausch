@@ -93,21 +93,7 @@ public class TradeMenu extends Menu {
         }
     }
 
-    private void returnItemToPlayer(UUID playerId, int index) {
-        Player player = Bukkit.getPlayer(playerId);
-        if (player == null) return;
 
-        List<ItemStack> items = tradeSession.getPlayerItems(playerId);
-        if (index >= items.size()) return;
-
-        if (player.getInventory().firstEmpty() != -1) {
-            player.getInventory().addItem(items.get(index));
-            tradeSession.removeItem(playerId, index);
-            tradeSession.reopenMenus();
-        } else {
-            player.sendMessage("§cYour inventory is full!");
-        }
-    }
 
     private void addInputButton(Map<Integer, Button> buttons, Player player) {
         buttons.put(INPUT_SLOT, new InputButton(tradeSession, player));

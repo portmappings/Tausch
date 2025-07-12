@@ -1,6 +1,8 @@
 package me.portmapping.trading.ui.user.button;
 
+import me.portmapping.trading.Tausch;
 import me.portmapping.trading.model.TradeSession;
+import me.portmapping.trading.utils.config.ConfigCursor;
 import me.portmapping.trading.utils.item.ItemBuilder;
 import me.portmapping.trading.utils.menu.Button;
 import org.bukkit.Material;
@@ -32,59 +34,78 @@ public class InputButton extends Button {
     }
 
     private ItemStack createInputButtonItem(List<ItemStack> myItems, List<ItemStack> otherItems, boolean confirmed, int countdown) {
-        int amount = Math.max(1, countdown); // Use countdown for item amount
+        ConfigCursor config = new ConfigCursor(Tausch.getInstance().getMenusConfig(), "input-button");
+
+        int amount = Math.max(1, countdown);
 
         if (confirmed) {
-            return new ItemBuilder(Material.GREEN_TERRACOTTA)
-                    .setDisplayName("&aDeal accepted!")
-                    .addToLore("&7You are still waiting for the")
-                    .addToLore("&7other side to accept")
+            ConfigCursor section = new ConfigCursor(config.getFileConfig(), config.getPath() + ".confirmed");
+            Material material = Material.matchMaterial(section.getString("material"));
+            String displayName = section.getString("display-name");
+            List<String> lore = section.getStringList("lore");
+            return new ItemBuilder(material)
+                    .setDisplayName(displayName)
+                    .setLore(lore)
                     .setAmount(amount)
                     .build();
         }
 
         if (countdown > 1) {
-            return new ItemBuilder(Material.RED_TERRACOTTA)
-                    .setDisplayName("&cWait " + countdown + " seconds")
-                    .addToLore("&7Please check your items before accepting")
-                    .addToLore("&7You must wait before confirming")
-                    .addToLore("&7the trade after changes")
+            ConfigCursor section = new ConfigCursor(config.getFileConfig(), config.getPath() + ".countdown");
+            Material material = Material.matchMaterial(section.getString("material"));
+            String displayName = section.getString("display-name").replace("{countdown}", String.valueOf(countdown));
+            List<String> lore = section.getStringList("lore");
+            lore.replaceAll(line -> line.replace("{countdown}", String.valueOf(countdown)));
+            return new ItemBuilder(material)
+                    .setDisplayName(displayName)
+                    .setLore(lore)
                     .setAmount(amount)
                     .build();
         }
 
         if (myItems.isEmpty() && otherItems.isEmpty()) {
-            return new ItemBuilder(Material.GRAY_TERRACOTTA)
-                    .setDisplayName("&aTrading")
-                    .addToLore("&7You need to click an item in your")
-                    .addToLore("&7inventory to offer it for trade")
+            ConfigCursor section = new ConfigCursor(config.getFileConfig(), config.getPath() + ".empty");
+            Material material = Material.matchMaterial(section.getString("material"));
+            String displayName = section.getString("display-name");
+            List<String> lore = section.getStringList("lore");
+            return new ItemBuilder(material)
+                    .setDisplayName(displayName)
+                    .setLore(lore)
                     .setAmount(amount)
                     .build();
         }
 
         if (myItems.isEmpty() && !otherItems.isEmpty()) {
-            return new ItemBuilder(Material.BLUE_TERRACOTTA)
-                    .setDisplayName("&bGift!")
-                    .addToLore("&7You are receiving items without")
-                    .addToLore("&7offering anything in return")
+            ConfigCursor section = new ConfigCursor(config.getFileConfig(), config.getPath() + ".gift");
+            Material material = Material.matchMaterial(section.getString("material"));
+            String displayName = section.getString("display-name");
+            List<String> lore = section.getStringList("lore");
+            return new ItemBuilder(material)
+                    .setDisplayName(displayName)
+                    .setLore(lore)
                     .setAmount(amount)
                     .build();
         }
 
         if (!myItems.isEmpty() && otherItems.isEmpty()) {
-            return new ItemBuilder(Material.ORANGE_TERRACOTTA)
-                    .setDisplayName("&eWarning!")
-                    .addToLore("&7You are offering items without")
-                    .addToLore("&7getting anything in return")
+            ConfigCursor section = new ConfigCursor(config.getFileConfig(), config.getPath() + ".warning");
+            Material material = Material.matchMaterial(section.getString("material"));
+            String displayName = section.getString("display-name");
+            List<String> lore = section.getStringList("lore");
+            return new ItemBuilder(material)
+                    .setDisplayName(displayName)
+                    .setLore(lore)
                     .setAmount(amount)
                     .build();
         }
 
-        return new ItemBuilder(Material.LIME_TERRACOTTA)
-                .setDisplayName("&eDeal!")
-                .addToLore("&7Trades cannot be reverted!")
-                .addToLore("&7Make sure to review the trade")
-                .addToLore("&7before accepting")
+        ConfigCursor section = new ConfigCursor(config.getFileConfig(), config.getPath() + ".deal");
+        Material material = Material.matchMaterial(section.getString("material"));
+        String displayName = section.getString("display-name");
+        List<String> lore = section.getStringList("lore");
+        return new ItemBuilder(material)
+                .setDisplayName(displayName)
+                .setLore(lore)
                 .setAmount(amount)
                 .build();
     }
