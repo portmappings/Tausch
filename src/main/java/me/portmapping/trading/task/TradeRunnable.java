@@ -9,14 +9,13 @@ import java.util.HashSet;
 import java.util.Set;
 
 
-//Pased from
+//Pased from 0.08% server thread usage to "0.00%" using spark
 public class TradeRunnable extends BukkitRunnable {
 
     @Override
     public void run() {
         Set<TradeSession> processedSessions = new HashSet<>();
 
-        // Avoid creating lambda inside the loop every tick
         for (TradeSession session : Tausch.getInstance().getTradeManager().getActiveTrades().values()) {
             if (!processedSessions.add(session)) continue;
 
@@ -24,7 +23,6 @@ public class TradeRunnable extends BukkitRunnable {
             if (countdown > 1) {
                 session.setCountdown(countdown - 1);
 
-                // Schedule the expensive menu update off the main logic tick
                 Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> session.reopenMenus());
             }
         }
