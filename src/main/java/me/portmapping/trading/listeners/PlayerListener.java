@@ -34,6 +34,11 @@ public class PlayerListener implements Listener {
         event.setCancelled(true);
 
         TradeSession session = tradeMenu.getTradeSession();
+
+        if (session.isCompleted()) {
+            return;
+        }
+
         if (!session.addItem(player.getUniqueId(), clickedItem.clone())) {
             player.sendMessage(CC.t("&cYou can't add more items to the trade!"));
             return;
@@ -58,6 +63,12 @@ public class PlayerListener implements Listener {
         if (tradeMenu == null) return;
 
         TradeSession session = tradeMenu.getTradeSession();
+
+        if (session.isCompleted()) {
+            TradeMenu.currentlyOpenedMenus.remove(quitter.getName());
+            return;
+        }
+
         session.cancelTrade();
         TradeMenu.currentlyOpenedMenus.remove(quitter.getName());
 
@@ -75,20 +86,29 @@ public class PlayerListener implements Listener {
         TradeMenu tradeMenu = getActiveTradeMenu(player);
         if (tradeMenu == null) return;
 
-        if (!tradeMenu.isClosedByMenu()) {
-            TradeMenu.currentlyOpenedMenus.remove(player.getName());
+        TradeSession session = tradeMenu.getTradeSession();
 
-            TradeSession session = tradeMenu.getTradeSession();
-            session.cancelTrade();
+        if (session.isCompleted() || tradeMenu.isClosedByMenu()) {
+            if (!session.isCompleted()) {
+                TradeMenu.currentlyOpenedMenus.remove(player.getName());
+            }
+            return;
+        }
 
-            Player partner = Bukkit.getPlayer(session.getOther(player));
-            if (partner != null && partner.isOnline()) {
+        if (session.bothConfirmed()) {
+            return;
+        }
+
+        TradeMenu.currentlyOpenedMenus.remove(player.getName());
+        session.cancelTrade();
+
+        Player partner = Bukkit.getPlayer(session.getOther(player));
+        if (partner != null && partner.isOnline()) {
+            TradeMenu partnerMenu = getActiveTradeMenu(partner);
+            if (partnerMenu != null) {
                 TradeMenu.currentlyOpenedMenus.remove(partner.getName());
                 partner.closeInventory();
-                partner.sendMessage(CC.t("&cThe trade has been cancelled."));
             }
-
-            player.sendMessage(CC.t("&cTrade cancelled."));
         }
     }
 }
