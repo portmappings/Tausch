@@ -154,7 +154,7 @@ public class TradeSession {
         player.sendMessage(CC.t("&a&l✓ Trade completed successfully!"));
 
         if (!givenItems.isEmpty()) {
-            player.sendMessage(CC.t("&cYou gave:"));
+
             Map<String, Integer> givenCounts = new HashMap<>();
             for (ItemStack item : givenItems) {
                 if (item != null && item.getType() != org.bukkit.Material.AIR) {
@@ -163,12 +163,12 @@ public class TradeSession {
                 }
             }
             for (Map.Entry<String, Integer> entry : givenCounts.entrySet()) {
-                player.sendMessage(CC.t("&c- x" + entry.getValue() + " &7" + entry.getKey()));
+                player.sendMessage(CC.t("&c- &fx" + entry.getValue() + " &7" + entry.getKey()));
             }
         }
 
         if (!receivedItems.isEmpty()) {
-            player.sendMessage(CC.t("&aYou received:"));
+
             Map<String, Integer> receivedCounts = new HashMap<>();
             for (ItemStack item : receivedItems) {
                 if (item != null && item.getType() != org.bukkit.Material.AIR) {
@@ -177,7 +177,7 @@ public class TradeSession {
                 }
             }
             for (Map.Entry<String, Integer> entry : receivedCounts.entrySet()) {
-                player.sendMessage(CC.t("&a+ x" + entry.getValue() + " &7" + entry.getKey()));
+                player.sendMessage(CC.t("&a+ &fx" + entry.getValue() + " &7" + entry.getKey()));
             }
         }
     }
