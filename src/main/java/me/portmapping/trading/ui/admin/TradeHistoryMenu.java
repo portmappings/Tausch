@@ -7,11 +7,13 @@ import me.portmapping.trading.Tausch;
 import me.portmapping.trading.model.TradeSession;
 import me.portmapping.trading.utils.item.ItemBuilder;
 import me.portmapping.trading.utils.menu.Button;
+import me.portmapping.trading.utils.menu.Menu;
 import me.portmapping.trading.utils.menu.pagination.PageButton;
 import me.portmapping.trading.utils.menu.pagination.PaginatedMenu;
 import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -45,7 +47,7 @@ public class TradeHistoryMenu extends PaginatedMenu {
 
     @Override
     public int getMaxItemsPerPage(Player player) {
-        return 28; // 4 rows of 7 items (excluding borders)
+        return 28;
     }
 
     @Override
@@ -96,17 +98,30 @@ public class TradeHistoryMenu extends PaginatedMenu {
                     allTrades.addAll(trades);
                     isLoaded = true;
                     isLoading = false;
+
+                    // Refresh any open menus
+                    refreshOpenMenus();
                 });
 
             } catch (Exception e) {
                 e.printStackTrace();
                 Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> {
                     isLoading = false;
+                    refreshOpenMenus();
                 });
             }
         });
     }
 
+    private void refreshOpenMenus() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            Menu openMenu = Menu.currentlyOpenedMenus.get(player.getName());
+            if (openMenu == this) {
+                // Only refresh menus that are this exact instance
+                openMenu(player);
+            }
+        }
+    }
 
     @Override
     public Map<Integer, Button> getGlobalButtons(Player player) {
@@ -163,15 +178,14 @@ public class TradeHistoryMenu extends PaginatedMenu {
                 String senderName = "Unknown";
                 String targetName = "Unknown";
 
-                // Try to get player names
+
                 try {
-                    Player senderPlayer = Bukkit.getPlayer(senderUUID);
+                    OfflinePlayer senderPlayer = Bukkit.getOfflinePlayer(senderUUID);
                     if (senderPlayer != null) senderName = senderPlayer.getName();
 
-                    Player targetPlayer = Bukkit.getPlayer(targetUUID);
+                    OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(targetUUID);
                     if (targetPlayer != null) targetName = targetPlayer.getName();
                 } catch (Exception e) {
-                    // Fallback to UUID if name lookup fails
                     senderName = senderUUID.toString().substring(0, 8);
                     targetName = targetUUID.toString().substring(0, 8);
                 }
@@ -237,10 +251,10 @@ public class TradeHistoryMenu extends PaginatedMenu {
 
                 // Try to get player names
                 try {
-                    Player senderPlayer = Bukkit.getPlayer(senderUUID);
+                    OfflinePlayer senderPlayer = Bukkit.getOfflinePlayer(senderUUID);
                     if (senderPlayer != null) senderName = senderPlayer.getName();
 
-                    Player targetPlayer = Bukkit.getPlayer(targetUUID);
+                    OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(targetUUID);
                     if (targetPlayer != null) targetName = targetPlayer.getName();
                 } catch (Exception e) {
                     // Fallback to UUID if name lookup fails
