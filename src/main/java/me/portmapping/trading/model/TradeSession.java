@@ -6,6 +6,7 @@ import lombok.Setter;
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.ui.user.TradeMenu;
 import me.portmapping.trading.utils.chat.CC;
+import me.portmapping.trading.utils.item.InventoryUtil;
 import me.portmapping.trading.utils.item.ItemUtil;
 import org.bson.Document;
 import org.bukkit.Bukkit;
@@ -29,11 +30,9 @@ public class TradeSession {
     private final List<ItemStack> senderItems = new ArrayList<>();
     private final List<ItemStack> targetItems = new ArrayList<>();
 
-    private long lastChangeTime = 0;
-    private int countdownTaskId = -1;
+    private int countdown = 4;
 
     public static final int MAX_ITEMS_PER_PLAYER = 16;
-    public static final long CHANGE_COOLDOWN_MS = 4000;
 
     public UUID getOther(UUID playerId) {
         return playerId.equals(sender) ? target : (playerId.equals(target) ? sender : null);
@@ -42,7 +41,6 @@ public class TradeSession {
     public UUID getOther(Player player) {
         return getOther(player.getUniqueId());
     }
-
 
     public List<ItemStack> getPlayerItems(UUID playerId) {
         if (playerId.equals(sender)) return senderItems;
@@ -61,7 +59,9 @@ public class TradeSession {
         if (items.size() >= MAX_ITEMS_PER_PLAYER) return false;
 
         items.add(item);
-        markChanged();
+        countdown = 4;
+        senderConfirmed = false;
+        targetConfirmed = false;
         return true;
     }
 
@@ -69,12 +69,14 @@ public class TradeSession {
         List<ItemStack> items = getPlayerItems(playerId);
         if (index >= 0 && index < items.size()) {
             items.remove(index);
-            markChanged();
+            countdown = 4;
+            senderConfirmed = false;
+            targetConfirmed = false;
         }
     }
 
     public void toggleConfirmation(UUID playerId) {
-        if (!canConfirm()) return;
+        if (countdown > 1) return;
 
         if (playerId.equals(sender)) {
             senderConfirmed = !senderConfirmed;
@@ -94,30 +96,71 @@ public class TradeSession {
     }
 
     public boolean canConfirm() {
-        return System.currentTimeMillis() - lastChangeTime >= CHANGE_COOLDOWN_MS;
-    }
-
-    public int getRemainingSeconds() {
-        long remaining = Math.max(0, CHANGE_COOLDOWN_MS - (System.currentTimeMillis() - lastChangeTime));
-        return (int) Math.ceil(remaining / 1000.0);
+        return countdown <= 1;
     }
 
     public boolean completeTrade() {
         Player senderPlayer = Bukkit.getPlayer(sender);
         Player targetPlayer = Bukkit.getPlayer(target);
 
+        // Cancel if either player is offline
         if (senderPlayer == null || targetPlayer == null) {
-            handleOfflinePlayer(senderPlayer, targetPlayer);
+            cancelTrade();
             return false;
         }
 
-        if (!hasInventorySpace(senderPlayer, targetItems) || !hasInventorySpace(targetPlayer, senderItems)) {
-            handleInsufficientSpace(senderPlayer, targetPlayer);
+        // Cancel if not enough inventory space
+        if (!InventoryUtil.hasInventorySpace(senderPlayer, targetItems) ||
+                !InventoryUtil.hasInventorySpace(targetPlayer, senderItems)) {
+
+            String spaceMessage = CC.t("&cTrade failed: someone needs more empty slots!");
+            senderPlayer.sendMessage(spaceMessage);
+            targetPlayer.sendMessage(spaceMessage);
+            reopenMenus();
             return false;
         }
 
-        executeTradeExchange(senderPlayer, targetPlayer);
+        // Execute trade
+        Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> {
+            senderPlayer.getInventory().addItem(targetItems.toArray(new ItemStack[0]));
+            targetPlayer.getInventory().addItem(senderItems.toArray(new ItemStack[0]));
+
+            String successMessage = "&aTrade complete!";
+            CC.sendMessage(senderPlayer, successMessage);
+            CC.sendMessage(targetPlayer, successMessage);
+
+            // Save to database
+            Document tradeDoc = toBson();
+            Bukkit.getScheduler().runTaskAsynchronously(
+                    Tausch.getInstance(),
+                    () -> Tausch.getInstance()
+                            .getMongoHandler()
+                            .getTradeHistory()
+                            .insertOne(tradeDoc)
+            );
+
+            // Clean up
+            cancel();
+            Tausch.getInstance().getTradeManager().getActiveTrades().remove(sender);
+            Tausch.getInstance().getTradeManager().getActiveTrades().remove(target);
+            senderPlayer.closeInventory();
+            targetPlayer.closeInventory();
+        });
+
         return true;
+    }
+
+    public void cancelTrade() {
+        Player senderPlayer = Bukkit.getPlayer(sender);
+        Player targetPlayer = Bukkit.getPlayer(target);
+
+        String cancelMessage = CC.t("&cTrade cancelled.");
+        if (senderPlayer != null) senderPlayer.sendMessage(cancelMessage);
+        if (targetPlayer != null) targetPlayer.sendMessage(cancelMessage);
+
+        cancel();
+        Tausch.getInstance().getTradeManager().getActiveTrades().remove(sender);
+        Tausch.getInstance().getTradeManager().getActiveTrades().remove(target);
     }
 
     public void reopenMenus() {
@@ -137,8 +180,7 @@ public class TradeSession {
         targetItems.clear();
         senderConfirmed = false;
         targetConfirmed = false;
-        lastChangeTime = 0;
-        cancelCountdownTask();
+        countdown = 4;
     }
 
     public Document toBson() {
@@ -176,85 +218,5 @@ public class TradeSession {
                         .toList());
 
         return session;
-    }
-
-    private void markChanged() {
-        lastChangeTime = System.currentTimeMillis();
-        senderConfirmed = false;
-        targetConfirmed = false;
-        startCountdownTask();
-    }
-
-    private void startCountdownTask() {
-        cancelCountdownTask();
-
-        if (lastChangeTime > 0) {
-            countdownTaskId = Bukkit.getScheduler().runTaskTimer(Tausch.getInstance(), () -> {
-                if (canConfirm()) {
-                    reopenMenus();
-                    cancelCountdownTask();
-                    return;
-                }
-                reopenMenus();
-            }, 0L, 20L).getTaskId();
-        }
-    }
-
-    private void cancelCountdownTask() {
-        if (countdownTaskId != -1) {
-            Bukkit.getScheduler().cancelTask(countdownTaskId);
-            countdownTaskId = -1;
-        }
-    }
-
-    private boolean hasInventorySpace(Player player, List<ItemStack> items) {
-        if (items.isEmpty()) return true;
-        return player.getInventory().firstEmpty() != -1 ||
-                player.getInventory().addItem(items.toArray(new ItemStack[0])).isEmpty();
-    }
-
-    private void handleOfflinePlayer(Player senderPlayer, Player targetPlayer) {
-        String offlineMessage = CC.t("&cTrade cancelled, player went offline.");
-        if (senderPlayer != null) senderPlayer.sendMessage(offlineMessage);
-        if (targetPlayer != null) targetPlayer.sendMessage(offlineMessage);
-        cancel();
-    }
-
-    private void handleInsufficientSpace(Player senderPlayer, Player targetPlayer) {
-        String spaceMessage = CC.t("&cTrade failed: someone needs more empty slots!");
-        senderPlayer.sendMessage(spaceMessage);
-        targetPlayer.sendMessage(spaceMessage);
-        reopenMenus();
-    }
-
-    private void executeTradeExchange(Player senderPlayer, Player targetPlayer) {
-        Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> {
-            senderPlayer.getInventory().addItem(targetItems.toArray(new ItemStack[0]));
-            targetPlayer.getInventory().addItem(senderItems.toArray(new ItemStack[0]));
-
-            String successMessage = "&aTrade complete!";
-            CC.sendMessage(senderPlayer, successMessage);
-            CC.sendMessage(targetPlayer, successMessage);
-
-            saveTradeToDatabase();
-            closeInventoriesAndCleanup(senderPlayer, targetPlayer);
-        });
-    }
-
-    private void saveTradeToDatabase() {
-        Document tradeDoc = toBson();
-        Bukkit.getScheduler().runTaskAsynchronously(
-                Tausch.getInstance(),
-                () -> Tausch.getInstance()
-                        .getMongoHandler()
-                        .getTradeHistory()
-                        .insertOne(tradeDoc)
-        );
-    }
-
-    private void closeInventoriesAndCleanup(Player senderPlayer, Player targetPlayer) {
-        cancel();
-        senderPlayer.closeInventory();
-        targetPlayer.closeInventory();
     }
 }

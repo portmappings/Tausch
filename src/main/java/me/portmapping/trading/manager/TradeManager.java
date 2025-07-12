@@ -1,7 +1,9 @@
 package me.portmapping.trading.manager;
 
+import lombok.Getter;
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.model.TradeSession;
+import me.portmapping.trading.task.TradeRunnable;
 import me.portmapping.trading.ui.user.TradeMenu;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -13,8 +15,10 @@ public class TradeManager {
     private final Tausch instance;
     public TradeManager(Tausch instance){
         this.instance = instance;
+        new TradeRunnable().runTaskTimerAsynchronously(instance, 0L, 22L);
     }
 
+    @Getter
     private final Map<UUID, TradeSession> activeTrades = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> pendingRequests = new ConcurrentHashMap<>();
 
