@@ -1,6 +1,7 @@
 package me.portmapping.trading;
 
 import lombok.Getter;
+import me.portmapping.trading.database.MongoHandler;
 import me.portmapping.trading.listeners.PlayerListener;
 import me.portmapping.trading.manager.CommandManager;
 import me.portmapping.trading.manager.TradeManager;
@@ -15,10 +16,13 @@ public final class Tausch extends JavaPlugin {
     private CommandManager commandManager;
     private TradeManager tradeManager;
     private FileConfig settingsConfig;
+
+    private MongoHandler mongoHandler;
     @Override
     public void onEnable() {
         instance = this;
         this.settingsConfig = new FileConfig(this, "settings.yml");
+        this.mongoHandler = new MongoHandler(this);
 
         this.commandManager = new CommandManager(this);
         this.tradeManager = new TradeManager(this);
