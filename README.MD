@@ -12,6 +12,8 @@ Provides a robust, intuitive, and secure system for players to trade items with 
 
 ## Main Features
 
+- Two types of full inventory behavior: `BLOCK` (prevents the trade) or `DROP` (drops excess items on the ground)
+
 - Player trading via `/trade <player>`
 - Two-step confirmation to prevent mistakes and duplication
 - Ignore system to block trade requests
