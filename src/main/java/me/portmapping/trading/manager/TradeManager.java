@@ -60,6 +60,9 @@ public class TradeManager {
         }
     }
 
+    public TradeSession getActiveSession(Player player) {
+        return activeTrades.get(player.getUniqueId());
+    }
     public boolean hasPendingRequest(Player player) {
         return pendingRequests.containsKey(player.getUniqueId());
     }

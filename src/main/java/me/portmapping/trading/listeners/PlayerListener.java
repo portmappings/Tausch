@@ -1,5 +1,6 @@
 package me.portmapping.trading.listeners;
 
+import me.portmapping.trading.Tausch;
 import me.portmapping.trading.model.TradeSession;
 import me.portmapping.trading.ui.user.TradeMenu;
 import me.portmapping.trading.utils.chat.CC;
@@ -8,7 +9,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -115,4 +118,15 @@ public class PlayerListener implements Listener {
             }
         }
     }
+
+
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onEntityPickup(EntityPickupItemEvent event) {
+        if (!(event.getEntity() instanceof Player player)) return;
+        TradeSession session = Tausch.getInstance().getTradeManager().getActiveSession(player);
+        if (session == null || session.isCompleted()) return;
+        event.setCancelled(true);
+    }
+
 }
