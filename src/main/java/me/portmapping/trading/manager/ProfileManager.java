@@ -9,10 +9,7 @@ import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 public class ProfileManager {
 
@@ -64,5 +61,9 @@ public class ProfileManager {
                 data.toBson(),
                 new ReplaceOptions().upsert(true)
         );
+    }
+
+    public Collection<Profile> getAllData() {
+        return this.profileMap.values();
     }
 }

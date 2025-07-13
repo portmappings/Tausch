@@ -1,24 +1,31 @@
 package me.portmapping.trading;
 
 import com.google.gson.Gson;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.Setter;
 import me.portmapping.trading.database.MongoHandler;
 import me.portmapping.trading.listeners.PlayerListener;
 import me.portmapping.trading.manager.CommandManager;
 import me.portmapping.trading.manager.ProfileManager;
 import me.portmapping.trading.manager.TradeManager;
+import me.portmapping.trading.model.Profile;
+import me.portmapping.trading.utils.Threads;
 import me.portmapping.trading.utils.chat.Language;
 import me.portmapping.trading.utils.config.FileConfig;
 import me.portmapping.trading.utils.menu.ButtonListener;
+import org.bukkit.Chunk;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.Map;
+import java.util.UUID;
 
 
 @Getter
 public final class Tausch extends JavaPlugin {
-    @Getter
-    private static Tausch instance;
-    @Getter
-    private static final Gson gson = new Gson();
+    @Getter @Setter(AccessLevel.PRIVATE) private static Tausch instance;
 
     private FileConfig settingsConfig;
     private FileConfig messagesConfig;
@@ -31,7 +38,8 @@ public final class Tausch extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        instance = this;
+        setInstance(this);
+        Threads.init();
         this.settingsConfig = new FileConfig(this, "settings.yml");
         this.messagesConfig = new FileConfig(this, "messages.yml");
         this.menusConfig = new FileConfig(this, "menus.yml");
@@ -50,6 +58,14 @@ public final class Tausch extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        try {
+            for (Profile profile : this.getProfileManager().getAllData()) {
+                Threads.executeData(() -> this.getProfileManager().saveData(profile));
+            }
 
+            if (this.mongoHandler != null) {
+                this.mongoHandler.getMongoClient().close();
+            }
+        } catch (NullPointerException ignored) {}
     }
 }
