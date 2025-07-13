@@ -6,6 +6,7 @@ import lombok.Setter;
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.ui.user.TradeMenu;
 import me.portmapping.trading.utils.chat.CC;
+import me.portmapping.trading.utils.chat.Language;
 import me.portmapping.trading.utils.item.InventoryUtil;
 import me.portmapping.trading.utils.item.ItemUtil;
 import org.bson.Document;
@@ -114,7 +115,7 @@ public class TradeSession {
 
         if (!InventoryUtil.hasInventorySpace(senderPlayer, targetItems) ||
                 !InventoryUtil.hasInventorySpace(targetPlayer, senderItems)) {
-            String spaceMessage = CC.t("&cTrade failed: someone needs more empty slots!");
+            String spaceMessage = Language.TRADE_FAILED_NO_SPACE;
             senderPlayer.sendMessage(spaceMessage);
             targetPlayer.sendMessage(spaceMessage);
             reopenMenus();
@@ -151,7 +152,7 @@ public class TradeSession {
     }
 
     private void sendTradeCompletionMessage(Player player, List<ItemStack> receivedItems, List<ItemStack> givenItems) {
-        player.sendMessage(CC.t("&a&l✓ Trade completed successfully!"));
+        player.sendMessage(Language.TRADE_COMPLETED);
 
         if (!givenItems.isEmpty()) {
 
@@ -163,7 +164,10 @@ public class TradeSession {
                 }
             }
             for (Map.Entry<String, Integer> entry : givenCounts.entrySet()) {
-                player.sendMessage(CC.t("&c- &fx" + entry.getValue() + " &7" + entry.getKey()));
+                String message = Language.ITEM_GIVEN_FORMAT
+                        .replace("%amount%", String.valueOf(entry.getValue()))
+                        .replace("%item%", entry.getKey());
+                player.sendMessage(message);
             }
         }
 
@@ -177,7 +181,10 @@ public class TradeSession {
                 }
             }
             for (Map.Entry<String, Integer> entry : receivedCounts.entrySet()) {
-                player.sendMessage(CC.t("&a+ &fx" + entry.getValue() + " &7" + entry.getKey()));
+                String message = Language.ITEM_RECEIVED_FORMAT
+                        .replace("%amount%", String.valueOf(entry.getValue()))
+                        .replace("%item%", entry.getKey());
+                player.sendMessage(message);
             }
         }
     }
@@ -196,7 +203,7 @@ public class TradeSession {
         if (isCompleted()) return;
         Player senderPlayer = Bukkit.getPlayer(sender);
         Player targetPlayer = Bukkit.getPlayer(target);
-        String cancelMessage = CC.t("&cTrade cancelled.");
+        String cancelMessage = Language.TRADE_CANCELLED;
         if (senderPlayer != null) senderPlayer.sendMessage(cancelMessage);
         if (targetPlayer != null) targetPlayer.sendMessage(cancelMessage);
         clearTradeData();

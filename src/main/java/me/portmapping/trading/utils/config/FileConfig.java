@@ -1,5 +1,6 @@
 package me.portmapping.trading.utils.config;
 
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -8,11 +9,11 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.io.IOException;
 
+@Getter
 public class FileConfig {
 
 	private final File file;
-
-	private final FileConfiguration config;
+	private FileConfiguration config;
 
 	public FileConfig(JavaPlugin plugin, String fileName) {
 		this.file = new File(plugin.getDataFolder(), fileName);
@@ -28,23 +29,20 @@ public class FileConfig {
 				plugin.saveResource(fileName, false);
 			}
 		}
+
 		this.config = YamlConfiguration.loadConfiguration(this.file);
-	}
-
-	public File getFile() {
-		return this.file;
-	}
-
-	public FileConfiguration getConfig() {
-		return this.config;
 	}
 
 	public void save() {
 		try {
 			this.config.save(this.file);
 		} catch (IOException e) {
-			Bukkit.getLogger().severe("Could not save config file " + this.file.toString());
-			e.printStackTrace();
+			Bukkit.getLogger().severe("Could not save config file " + this.file);
+			Bukkit.getLogger().severe(e.getMessage());
 		}
+	}
+
+	public void reload() {
+		this.config = YamlConfiguration.loadConfiguration(this.file);
 	}
 }

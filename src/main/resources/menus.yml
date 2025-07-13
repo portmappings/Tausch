@@ -60,6 +60,18 @@ trade-view:
       - "&7━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     glow: true
 
+confirmation-status-button:
+  confirmed:
+    material: LIME_DYE
+    display-name: "&a&lConfirmed!"
+    lore:
+      - "&7{other} has accepted the trade."
+  pending:
+    material: GRAY_DYE
+    display-name: "&e&lWaiting for {other}"
+    lore:
+      - "&7Waiting for {other} to confirm..."
+
 input-button:
   confirmed:
     material: GREEN_TERRACOTTA

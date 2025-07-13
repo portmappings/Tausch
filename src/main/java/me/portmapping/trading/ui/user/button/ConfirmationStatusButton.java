@@ -2,47 +2,56 @@ package me.portmapping.trading.ui.user.button;
 
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.model.TradeSession;
+import me.portmapping.trading.utils.config.ConfigCursor;
 import me.portmapping.trading.utils.item.ItemBuilder;
 import me.portmapping.trading.utils.menu.Button;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class ConfirmationStatusButton extends Button {
-    private final TradeSession session;
-    private final Player player;
 
-    public ConfirmationStatusButton(TradeSession session, Player player) {
+    private final TradeSession session;
+
+    public ConfirmationStatusButton(TradeSession session, Player ignoredViewer) {
         this.session = session;
-        this.player = player;
     }
 
     @Override
-    public ItemStack getButtonItem(Player player) {
-        UUID playerId = player.getUniqueId();
-        UUID otherUUID = session.getOther(playerId);
-        Player other = Bukkit.getPlayer(otherUUID);
-        String otherName = other != null ? other.getName() : "Unknown";
-        boolean otherConfirmed = session.hasConfirmed(otherUUID);
+    public ItemStack getButtonItem(Player viewer) {
+        UUID viewerId = viewer.getUniqueId();
+        UUID partnerId = session.getOther(viewerId);
+        Player partner = Bukkit.getPlayer(partnerId);
+        String partnerName = partner != null ? partner.getName() : "Unknown";
+        boolean partnerConfirmed = session.hasConfirmed(partnerId);
 
-        ConfigurationSection section = Tausch.getInstance().getMenusConfig().getConfig().getConfigurationSection("confirmation-status-button");
-        ConfigurationSection stateSection = otherConfirmed ? section.getConfigurationSection("confirmed") : section.getConfigurationSection("pending");
+        String stateKey = partnerConfirmed ? "confirmed" : "pending";
+        ConfigCursor cursor = new ConfigCursor(Tausch.getInstance().getMenusConfig(),
+                "confirmation-status-button." + stateKey);
 
-        Material material = Material.matchMaterial(stateSection.getString("material", "GRAY_DYE"));
-        String displayName = stateSection.getString("display-name", "&ePending their confirm").replace("{other}", otherName);
-        List<String> loreList = stateSection.getStringList("lore");
-        for (int i = 0; i < loreList.size(); i++) {
-            loreList.set(i, loreList.get(i).replace("{other}", otherName));
-        }
+        Material material = Optional.ofNullable(
+                        Material.matchMaterial(cursor.getString("material", "GRAY_DYE")))
+                .orElse(Material.GRAY_DYE);
+
+        String display = ChatColor.translateAlternateColorCodes('&',
+                cursor.getString("display-name", "&ePending {other} confirm")
+                        .replace("{other}", partnerName));
+
+        List<String> lore = cursor.getStringList("lore",
+                        Collections.singletonList("&7Waiting for {other} to confirm..."))
+                .stream()
+                .map(s -> ChatColor.translateAlternateColorCodes('&',
+                        s.replace("{other}", partnerName)))
+                .collect(Collectors.toList());
 
         return new ItemBuilder(material)
-                .setDisplayName(displayName)
-                .setLore(loreList)
+                .setDisplayName(display)
+                .setLore(lore)
                 .build();
     }
 }

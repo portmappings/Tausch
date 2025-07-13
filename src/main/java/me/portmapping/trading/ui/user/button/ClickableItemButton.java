@@ -2,6 +2,7 @@ package me.portmapping.trading.ui.user.button;
 
 import lombok.RequiredArgsConstructor;
 import me.portmapping.trading.model.TradeSession;
+import me.portmapping.trading.utils.chat.Language;
 import me.portmapping.trading.utils.menu.Button;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -34,7 +35,7 @@ public class ClickableItemButton extends Button {
             tradeSession.removeItem(player.getUniqueId(), index);
             tradeSession.reopenMenus();
         } else {
-            player.sendMessage("§cYour inventory is full!");
+            player.sendMessage(Language.INVENTORY_FULL);
         }
         return;
     }

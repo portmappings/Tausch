@@ -1,0 +1,26 @@
+messages:
+  trade:
+    failed_no_space: "&cTrade failed: someone needs more empty slots!"
+    trade_cancelled: "&cTrade cancelled."
+    trade_completed: "&a&l✓ Trade completed successfully!"
+    item_given_format: "&c- &fx%amount% &7%item%"
+    item_received_format: "&a+ &fx%amount% &7%item%"
+    usage: "&eUsage: /trade <player>"
+    self: "&cYou cannot trade with yourself."
+    request_sent: "&aYou sent a trade request to %target%"
+    request_received: "&e%sender% has sent you a trade request. Use /trade accept or /trade decline."
+    request_failed: "&cTrade request could not be sent. Maybe the target already has a pending request."
+    request_accepted_by_target: "&aYou accepted a trading request from %player%"
+    request_accepted: "&a%player% accepted your trade request."
+    no_pending_request: "&cYou don't have any pending trade request."
+    request_declined: "&cYou declined the trade request."
+    items_full: "&cYou cannot add more items."
+    inventory_full: "&cYour inventory is full."
+
+hover:
+  trade:
+    accept: "&a✔ Click to accept %sender%'s trade request"
+    decline: "&c✖ Click to decline %sender%'s trade request"
+    accept_hover: "&7Accept %sender%'s trade request."
+    decline_hover: "&7Decline %sender%'s trade request."
+

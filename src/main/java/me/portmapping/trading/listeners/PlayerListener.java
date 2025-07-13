@@ -3,6 +3,7 @@ package me.portmapping.trading.listeners;
 import me.portmapping.trading.model.TradeSession;
 import me.portmapping.trading.ui.user.TradeMenu;
 import me.portmapping.trading.utils.chat.CC;
+import me.portmapping.trading.utils.chat.Language;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -40,7 +41,7 @@ public class PlayerListener implements Listener {
         }
 
         if (!session.addItem(player.getUniqueId(), clickedItem.clone())) {
-            player.sendMessage(CC.t("&cYou can't add more items to the trade!"));
+            player.sendMessage(Language.TRADE_ITEMS_FULL);
             return;
         }
 

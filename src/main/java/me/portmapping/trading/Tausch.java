@@ -6,6 +6,7 @@ import me.portmapping.trading.database.MongoHandler;
 import me.portmapping.trading.listeners.PlayerListener;
 import me.portmapping.trading.manager.CommandManager;
 import me.portmapping.trading.manager.TradeManager;
+import me.portmapping.trading.utils.chat.Language;
 import me.portmapping.trading.utils.config.FileConfig;
 import me.portmapping.trading.utils.menu.ButtonListener;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,6 +33,7 @@ public final class Tausch extends JavaPlugin {
         this.settingsConfig = new FileConfig(this, "settings.yml");
         this.messagesConfig = new FileConfig(this, "messages.yml");
         this.menusConfig = new FileConfig(this, "menus.yml");
+        Language.loadMessages();
 
         this.mongoHandler = new MongoHandler(this);
         this.commandManager = new CommandManager(this);
