@@ -2,3 +2,4 @@ name: Tausch
 version: '1.0-SNAPSHOT'
 main: me.portmapping.trading.Tausch
 api-version: '1.21'
+author: PortMapping
