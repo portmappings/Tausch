@@ -28,6 +28,7 @@ public class TradeMenu extends Menu {
     private static final int INPUT_SLOT = 39;
     private static final int CONFIRMATION_STATUS_SLOT = 41;
 
+
     private static final List<Integer> LEFT_SLOTS = Arrays.asList(
             0, 1, 2, 3,
             9, 10, 11, 12,

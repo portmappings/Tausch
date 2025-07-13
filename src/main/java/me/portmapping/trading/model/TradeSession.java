@@ -110,42 +110,52 @@ public class TradeSession {
             return;
         }
 
-        if (!InventoryUtil.hasInventorySpace(senderPlayer, targetItems) ||
-                !InventoryUtil.hasInventorySpace(targetPlayer, senderItems)) {
-            String spaceMessage = Language.TRADE_FAILED_NO_SPACE;
-            senderPlayer.sendMessage(spaceMessage);
-            targetPlayer.sendMessage(spaceMessage);
+        String mode = Tausch.getInstance()
+                .getSettingsConfig()
+                .getConfig()
+                .getString("TRADE.FULL_INVENTORY_BEHAVIOR", "BLOCK");
+        boolean dropOnFull = "DROP".equalsIgnoreCase(mode);
+
+
+        Map<Integer, ItemStack> leftoverSender = senderPlayer.getInventory().addItem(
+                targetItems.toArray(new ItemStack[0]));
+
+
+        Map<Integer, ItemStack> leftoverTarget = targetPlayer.getInventory().addItem(
+                senderItems.toArray(new ItemStack[0]));
+
+        if (!dropOnFull && (!leftoverSender.isEmpty() || !leftoverTarget.isEmpty())) {
+            senderPlayer.sendMessage(Language.TRADE_FAILED_NO_SPACE);
+            targetPlayer.sendMessage(Language.TRADE_FAILED_NO_SPACE);
             reopenMenus();
             return;
         }
 
-        Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> {
-            senderPlayer.getInventory().addItem(targetItems.toArray(new ItemStack[0]));
-            targetPlayer.getInventory().addItem(senderItems.toArray(new ItemStack[0]));
-            senderPlayer.playSound(senderPlayer.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-            targetPlayer.playSound(targetPlayer.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+        leftoverSender.values().forEach(item ->
+                senderPlayer.getWorld().dropItemNaturally(senderPlayer.getLocation(), item));
 
-            sendTradeCompletionMessage(senderPlayer, targetItems, senderItems);
-            sendTradeCompletionMessage(targetPlayer, senderItems, targetItems);
+        leftoverTarget.values().forEach(item ->
+                targetPlayer.getWorld().dropItemNaturally(targetPlayer.getLocation(), item));
 
-            completedAt = System.currentTimeMillis();
+        senderPlayer.playSound(senderPlayer.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
+        targetPlayer.playSound(targetPlayer.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
 
-            Document tradeDoc = toBson();
-            Bukkit.getScheduler().runTaskAsynchronously(
-                    Tausch.getInstance(),
-                    () -> Tausch.getInstance()
-                            .getMongoHandler()
-                            .getTradeHistory()
-                            .insertOne(tradeDoc)
-            );
+        sendTradeCompletionMessage(senderPlayer, targetItems, senderItems);
+        sendTradeCompletionMessage(targetPlayer, senderItems, targetItems);
 
-            Tausch.getInstance().getTradeManager().getActiveTrades().remove(sender);
-            Tausch.getInstance().getTradeManager().getActiveTrades().remove(target);
-            senderPlayer.closeInventory();
-            targetPlayer.closeInventory();
-        });
+        completedAt = System.currentTimeMillis();
 
+
+        Document tradeDoc = toBson();
+        Bukkit.getScheduler().runTaskAsynchronously(Tausch.getInstance(), () ->
+                Tausch.getInstance().getMongoHandler().getTradeHistory().insertOne(tradeDoc));
+
+        Tausch.getInstance().getTradeManager().getActiveTrades().remove(sender);
+        Tausch.getInstance().getTradeManager().getActiveTrades().remove(target);
+        senderPlayer.closeInventory();
+        targetPlayer.closeInventory();
     }
+
 
     private void sendTradeCompletionMessage(Player player, List<ItemStack> receivedItems, List<ItemStack> givenItems) {
         player.sendMessage(Language.TRADE_COMPLETED);

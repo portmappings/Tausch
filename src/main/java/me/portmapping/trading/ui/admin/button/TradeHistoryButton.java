@@ -45,19 +45,18 @@ public class TradeHistoryButton extends Button {
         Material material = matName == null ? Material.CHEST : Material.valueOf(matName.toUpperCase());
         String displayTemplate = configCursor.getString("display-name") == null ? "&6&lTrade with {other}" : configCursor.getString("display-name");
         String display = CC.t(displayTemplate.replace("{other}", otherName));
+        String formattedDate = formatTradeDate(tradeSession.getCompletedAt());
         List<String> loreTemplates = configCursor.getStringList("lore");
         String viewerCount = String.valueOf(viewerItems.size());
         String otherCount = String.valueOf(otherItems.size());
         List<String> lore = loreTemplates.stream()
                 .map(s -> s.replace("{other}", otherName)
                         .replace("{viewer_items}", viewerCount)
-                        .replace("{other_items}", otherCount))
+                        .replace("{other_items}", otherCount)
+                        .replace("{date}", formattedDate))
                 .map(CC::t)
                 .collect(Collectors.toList());
 
-        // Add trade date line here
-        String formattedDate = formatTradeDate(tradeSession.getCompletedAt());
-        lore.add(CC.t("&7Date: &e" + formattedDate));
 
         boolean glow = configCursor.getBoolean("glow");
         ItemBuilder builder = new ItemBuilder(material).setDisplayName(display).setLore(lore);

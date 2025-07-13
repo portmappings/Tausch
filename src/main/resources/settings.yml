@@ -1,4 +1,6 @@
-
 MONGO:
   URI: "mongodb://localhost:27017"
-  DATABASE: "tausch"
+  DATABASE: "tausch9"
+
+TRADE:
+  FULL_INVENTORY_BEHAVIOR: "DROP" # Options: BLOCK, DROP

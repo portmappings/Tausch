@@ -25,6 +25,7 @@ trade-history-button:
   lore:
     - "&7━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
     - "&7Traded with: &f{other}"
+    - "&7Date: &e{date}"
     - ""
     - "&7Your Items: &f{viewer_items}"
     - "&7Their Items: &f{other_items}"
@@ -111,4 +112,9 @@ input-button:
       - "&7Trades cannot be reverted!"
       - "&7Make sure to review the trade"
       - "&7before accepting"
-
+  no-space:
+    material: BARRIER
+    display-name: "&cNot enough space!"
+    lore:
+      - "&7You need inventory space"
+      - "&7to accept this trade."
