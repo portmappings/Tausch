@@ -46,21 +46,32 @@ public class TradeManager {
     }
 
     public boolean acceptTradeRequest(Player target) {
-        UUID senderId = pendingRequests.remove(target.getUniqueId());
+        UUID targetId = target.getUniqueId();
+
+        // Get and remove the sender of the pending request to this target
+        UUID senderId = pendingRequests.remove(targetId);
         if (senderId == null) return false;
 
         Player sender = Bukkit.getPlayer(senderId);
         if (sender == null || !sender.isOnline()) return false;
 
-        TradeSession session = new TradeSession(sender.getUniqueId(), target.getUniqueId());
-        activeTrades.put(sender.getUniqueId(), session);
-        activeTrades.put(target.getUniqueId(), session);
+        // Clear all other pending requests involving these two players:
+        pendingRequests.entrySet().removeIf(entry -> entry.getValue().equals(senderId));
+
+        //Remove all pending requests sent TO the target (should be none since we removed the one above, but just to be safe)
+        pendingRequests.entrySet().removeIf(entry -> entry.getKey().equals(targetId));
+
+        // Create new trade session and add to active trades
+        TradeSession session = new TradeSession(senderId, targetId);
+        activeTrades.put(senderId, session);
+        activeTrades.put(targetId, session);
 
         TradeMenu tradeMenu = new TradeMenu(session);
         tradeMenu.openMenu(target);
         tradeMenu.openMenu(sender);
         return true;
     }
+
 
     public void declineTrade(Player player) {
         UUID playerId = player.getUniqueId();
