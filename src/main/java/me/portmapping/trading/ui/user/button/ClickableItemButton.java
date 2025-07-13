@@ -41,6 +41,5 @@ public class ClickableItemButton extends Button {
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
             player.sendMessage(Language.INVENTORY_FULL);
         }
-        return;
     }
 }

@@ -11,7 +11,6 @@ import me.portmapping.trading.utils.config.FileConfig;
 import me.portmapping.trading.utils.menu.ButtonListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 
 @Getter
 public final class Tausch extends JavaPlugin {
@@ -47,6 +46,6 @@ public final class Tausch extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+
     }
 }

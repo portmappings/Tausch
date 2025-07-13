@@ -46,7 +46,7 @@ public class ItemBuilder implements Cloneable {
 
     public ItemBuilder addToLore(String... entries) {
         List<String> lore = this.itemMeta.hasLore() ? this.itemMeta.getLore() : new ArrayList();
-        ((List)lore).addAll(Arrays.asList(entries));
+        lore.addAll(Arrays.asList(entries));
         this.itemMeta.setLore(CC.t(lore));
         return this;
     }
@@ -68,7 +68,7 @@ public class ItemBuilder implements Cloneable {
         if (glowing) {
             this.itemMeta.setEnchantmentGlintOverride(true);
         } else {
-            this.itemMeta.setEnchantmentGlintOverride((Boolean)null);
+            this.itemMeta.setEnchantmentGlintOverride(null);
         }
 
         return this;
