@@ -13,7 +13,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -50,10 +54,24 @@ public class TradeHistoryButton extends Button {
                         .replace("{other_items}", otherCount))
                 .map(CC::t)
                 .collect(Collectors.toList());
+
+        // Add trade date line here
+        String formattedDate = formatTradeDate(tradeSession.getCompletedAt());
+        lore.add(CC.t("&7Date: &e" + formattedDate));
+
         boolean glow = configCursor.getBoolean("glow");
         ItemBuilder builder = new ItemBuilder(material).setDisplayName(display).setLore(lore);
         if (glow) builder.glowing(true);
         return builder.build();
+    }
+
+    private String formatTradeDate(long timestamp) {
+        if (timestamp <= 0) return "N/A";
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d, yyyy HH:mm", Locale.ENGLISH)
+                .withZone(ZoneId.systemDefault());
+
+        return formatter.format(Instant.ofEpochMilli(timestamp));
     }
 
     @Override
