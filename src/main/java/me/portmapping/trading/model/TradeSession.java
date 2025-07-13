@@ -155,36 +155,26 @@ public class TradeSession {
         player.sendMessage(Language.TRADE_COMPLETED);
 
         if (!givenItems.isEmpty()) {
-
-            Map<String, Integer> givenCounts = new HashMap<>();
             for (ItemStack item : givenItems) {
                 if (item != null && item.getType() != org.bukkit.Material.AIR) {
                     String name = getItemDisplayName(item);
-                    givenCounts.put(name, givenCounts.getOrDefault(name, 0) + item.getAmount());
+                    String message = Language.ITEM_GIVEN_FORMAT
+                            .replace("%amount%", String.valueOf(item.getAmount()))
+                            .replace("%item%", name);
+                    player.sendMessage(message);
                 }
-            }
-            for (Map.Entry<String, Integer> entry : givenCounts.entrySet()) {
-                String message = Language.ITEM_GIVEN_FORMAT
-                        .replace("%amount%", String.valueOf(entry.getValue()))
-                        .replace("%item%", entry.getKey());
-                player.sendMessage(message);
             }
         }
 
         if (!receivedItems.isEmpty()) {
-
-            Map<String, Integer> receivedCounts = new HashMap<>();
             for (ItemStack item : receivedItems) {
                 if (item != null && item.getType() != org.bukkit.Material.AIR) {
                     String name = getItemDisplayName(item);
-                    receivedCounts.put(name, receivedCounts.getOrDefault(name, 0) + item.getAmount());
+                    String message = Language.ITEM_RECEIVED_FORMAT
+                            .replace("%amount%", String.valueOf(item.getAmount()))
+                            .replace("%item%", name);
+                    player.sendMessage(message);
                 }
-            }
-            for (Map.Entry<String, Integer> entry : receivedCounts.entrySet()) {
-                String message = Language.ITEM_RECEIVED_FORMAT
-                        .replace("%amount%", String.valueOf(entry.getValue()))
-                        .replace("%item%", entry.getKey());
-                player.sendMessage(message);
             }
         }
     }
