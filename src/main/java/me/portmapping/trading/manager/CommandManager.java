@@ -31,6 +31,7 @@ public class CommandManager {
 	}
 
 	private void register() {
+		handler.register(new Tausch());
 		handler.register(new TradeCommand());
 		handler.register(new TradeHistoryCommand());
 
