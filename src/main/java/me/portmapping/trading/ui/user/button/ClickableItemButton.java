@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.portmapping.trading.model.TradeSession;
 import me.portmapping.trading.utils.chat.Language;
 import me.portmapping.trading.utils.menu.Button;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
@@ -32,9 +33,12 @@ public class ClickableItemButton extends Button {
 
         if (player.getInventory().firstEmpty() != -1) {
             player.getInventory().addItem(items.get(index));
+            player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1F, 1F);
             tradeSession.removeItem(player.getUniqueId(), index);
             tradeSession.reopenMenus();
+
         } else {
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
             player.sendMessage(Language.INVENTORY_FULL);
         }
         return;

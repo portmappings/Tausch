@@ -5,6 +5,7 @@ import me.portmapping.trading.ui.user.TradeMenu;
 import me.portmapping.trading.utils.chat.CC;
 import me.portmapping.trading.utils.chat.Language;
 import org.bukkit.Bukkit;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -44,7 +45,7 @@ public class PlayerListener implements Listener {
             player.sendMessage(Language.TRADE_ITEMS_FULL);
             return;
         }
-
+        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
         player.getInventory().setItem(event.getSlot(), null);
 
         TradeMenu newTradeMenu = new TradeMenu(session);
@@ -53,6 +54,8 @@ public class PlayerListener implements Listener {
         Player other = Bukkit.getPlayer(session.getOther(player));
         if (other != null && other.isOnline()) {
             newTradeMenu.openMenu(other);
+            //Will be pretty anoying so we remove it
+            //other.playSound(other.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
         }
     }
 

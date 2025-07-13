@@ -6,6 +6,7 @@ import me.portmapping.trading.utils.config.ConfigCursor;
 import me.portmapping.trading.utils.item.ItemBuilder;
 import me.portmapping.trading.utils.menu.Button;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
@@ -113,6 +114,13 @@ public class InputButton extends Button {
     @Override
     public void clicked(Player player, int slot, ClickType clickType, int hotbarButton) {
         UUID playerId = player.getUniqueId();
+        List<ItemStack> myItems = session.getPlayerItems(playerId);
+        List<ItemStack> otherItems = session.getOtherPlayerItems(playerId);
+        if (myItems.isEmpty() && otherItems.isEmpty()) {
+            player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
+            return;
+        }
+
         session.toggleConfirmation(playerId);
         session.reopenMenus();
 
