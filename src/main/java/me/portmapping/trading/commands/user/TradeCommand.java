@@ -1,9 +1,8 @@
 package me.portmapping.trading.commands.user;
 
 import me.portmapping.trading.Tausch;
-import me.portmapping.trading.manager.TradeManager;
-import me.portmapping.trading.manager.TradeManager.TradeRequestResult;
 import me.portmapping.trading.model.Profile;
+import me.portmapping.trading.model.TradeRequestResult;
 import me.portmapping.trading.model.TradeSession;
 import me.portmapping.trading.utils.chat.Clickable;
 import me.portmapping.trading.utils.chat.Language;
