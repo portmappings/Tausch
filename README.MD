@@ -1,39 +1,36 @@
 # Tausch
 
-*Intercambia items entre jugadores de forma rápida y segura.*
+*Quick and secure item trading between players.*
 
 ---
 
-## Descripción
+## Description
 
-Ofrece un sistema robusto, intuitivo y seguro para que los jugadores puedan intercambiar items con confirmación, evitando exploits y con registros almacenados en MongoDB para auditoría.
-
----
-
-## Características principales
-
-- Tradeo entre jugadores vía `/trade <jugador>`
-- Confirmación en dos fases para evitar errores y dupes
-- Sistema de ignore para no recibir solicitudes de trade
-- Logs completos almacenados en MongoDB para auditoría
-- Menús intuitivos y mensajes configurables en múltiples idiomas
-- Comandos administrativos para recargar configs y consultar historial
-- Optimizaciones para alto rendimiento en servidores grandes
-- Sistema flexible y escalable pensado para futuros addons
+Provides a robust, intuitive, and secure system for players to trade items with confirmation, avoiding exploits, with logs stored in MongoDB for auditing purposes.
 
 ---
 
-## Comandos
+## Main Features
 
-| Comando                   | Uso                             | Permisos       | Descripción                                      |
-|---------------------------|--------------------------------|----------------|-------------------------------------------------|
-| `/trade <jugador>`        | Enviar solicitud de trade      | `-`            | Envía una solicitud de trade al jugador indicado. |
-| `/trade accept`            | Aceptar solicitud pendiente    | `-`    | Acepta la solicitud de trade recibida.          |
-| `/trade decline`           | Rechazar solicitud pendiente   | `-`    | Rechaza la solicitud de trade recibida.         |
-| `/trade ignore`            | Activar/desactivar ignore trade | `-`     | Alterna si recibes solicitudes de trade.        |
-| `/tausch`                  | Mostrar información del plugin | `-`     | Muestra versión, autor y datos del plugin.       |
-| `/tausch reload`           | Recargar configuración y mensajes | `tausch.admin` | Recarga los archivos de configuración y mensajes. |
-| `/tradehistory <jugador>` | Mostrar historial de tradeos   | `tausch.admin` | Abre menú con el historial de tradeos del jugador. |
+- Player trading via `/trade <player>`
+- Two-step confirmation to prevent mistakes and duplication
+- Ignore system to block trade requests
+- Full logs stored in MongoDB for auditing
+- Intuitive menus and configurable messages in multiple languages
+- Admin commands to reload configs and view trade history
+- Optimized for high performance on large servers
+- Flexible and scalable system designed for future addons
 
 ---
 
+## Commands
+
+| Command                   | Usage                             | Permissions     | Description                                               |
+|---------------------------|-----------------------------------|------------------|-----------------------------------------------------------|
+| `/trade <player>`         | Send trade request                | `-`              | Sends a trade request to the specified player.            |
+| `/trade accept`           | Accept pending request            | `-`              | Accepts the received trade request.                       |
+| `/trade decline`          | Decline pending request           | `-`              | Declines the received trade request.                      |
+| `/trade ignore`           | Toggle trade request ignoring     | `-`              | Toggles whether you receive trade requests.               |
+| `/tausch`                 | Show plugin information           | `-`              | Displays version, author, and plugin details.             |
+| `/tausch reload`          | Reload config and messages        | `tausch.admin`   | Reloads configuration and message files.                  |
+| `/tradehistory <player>`  | Show trade history                | `tausch.admin`   | Opens a menu with the trade history of the specified player. |
