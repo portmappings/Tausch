@@ -3,7 +3,7 @@ package me.portmapping.trading.manager;
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.commands.admin.TradeHistoryCommand;
 import me.portmapping.trading.commands.exceptions.CommandExceptionHandler;
-import me.portmapping.trading.commands.user.TauschCommand;
+import me.portmapping.trading.commands.admin.TauschCommand;
 import me.portmapping.trading.commands.user.TradeCommand;
 import org.bukkit.entity.Player;
 import revxrsal.commands.bukkit.BukkitCommandHandler;

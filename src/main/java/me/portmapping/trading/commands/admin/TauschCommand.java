@@ -1,4 +1,4 @@
-package me.portmapping.trading.commands.user;
+package me.portmapping.trading.commands.admin;
 
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.utils.chat.CC;
