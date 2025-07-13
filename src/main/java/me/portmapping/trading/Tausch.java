@@ -66,6 +66,7 @@ public final class Tausch extends JavaPlugin {
             if (this.mongoHandler != null) {
                 this.mongoHandler.getMongoClient().close();
             }
+            Threads.close();
         } catch (NullPointerException ignored) {}
     }
 }

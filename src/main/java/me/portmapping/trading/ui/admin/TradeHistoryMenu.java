@@ -10,16 +10,15 @@ import me.portmapping.trading.ui.admin.button.LoadingButton;
 import me.portmapping.trading.ui.admin.button.NoTradeHistoryButton;
 import me.portmapping.trading.ui.admin.button.RefreshButton;
 import me.portmapping.trading.ui.admin.button.TradeHistoryButton;
+import me.portmapping.trading.utils.Threads;
 import me.portmapping.trading.utils.chat.CC;
 import me.portmapping.trading.utils.config.ConfigCursor;
-import me.portmapping.trading.utils.item.ItemBuilder;
 import me.portmapping.trading.utils.menu.Button;
 import me.portmapping.trading.utils.menu.pagination.PaginatedMenu;
 import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,7 +32,7 @@ public class TradeHistoryMenu extends PaginatedMenu {
 
     private final UUID targetPlayerId;
     private final Map<Integer, TradeSession> tradeHistory = new ConcurrentHashMap<>();
-    private boolean isLoading = true;
+    private volatile boolean isLoading = true;
 
     @Override
     public String getPrePaginatedTitle(Player player) {
@@ -46,15 +45,18 @@ public class TradeHistoryMenu extends PaginatedMenu {
     @Override
     public Map<Integer, Button> getAllPagesButtons(Player player) {
         Map<Integer, Button> buttons = new HashMap<>();
+
         if (isLoading) {
             buttons.put(0, new LoadingButton());
             loadTradeHistoryAsync(player);
             return buttons;
         }
+
         if (tradeHistory.isEmpty()) {
             buttons.put(0, new NoTradeHistoryButton());
             return buttons;
         }
+
         int index = 0;
         for (Map.Entry<Integer, TradeSession> entry : tradeHistory.entrySet()) {
             TradeSession session = entry.getValue();
@@ -64,35 +66,46 @@ public class TradeHistoryMenu extends PaginatedMenu {
     }
 
     private void loadTradeHistoryAsync(Player viewer) {
-        Bukkit.getScheduler().runTaskAsynchronously(Tausch.getInstance(), () -> {
+        Threads.executeData(() -> {
             try {
                 Document query = new Document("$or", Arrays.asList(
                         new Document("sender", targetPlayerId.toString()),
                         new Document("target", targetPlayerId.toString())
                 ));
-                FindIterable<Document> results = Tausch.getInstance().getMongoHandler().getTradeHistory().find(query).limit(500);
+
+                FindIterable<Document> results = Tausch.getInstance()
+                        .getMongoHandler()
+                        .getTradeHistory()
+                        .find(query)
+                        .limit(500);
+
                 List<TradeSession> loadedSessions = new ArrayList<>();
                 for (Document doc : results) {
                     try {
-                        TradeSession session = TradeSession.fromBson(doc);
-                        loadedSessions.add(session);
+                        loadedSessions.add(TradeSession.fromBson(doc));
                     } catch (Exception ignored) {
                     }
                 }
+
                 loadedSessions.sort((s1, s2) -> Long.compare(s2.getCompletedAt(), s1.getCompletedAt()));
+
                 Map<Integer, TradeSession> loadedTrades = new LinkedHashMap<>();
                 int index = 0;
                 for (TradeSession session : loadedSessions) {
                     loadedTrades.put(index++, session);
                 }
-                Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> {
+
+                Threads.sync(() -> {
                     tradeHistory.clear();
                     tradeHistory.putAll(loadedTrades);
                     isLoading = false;
-                    if (viewer.isOnline()) openMenu(viewer);
+
+                    if (viewer.isOnline()) {
+                        openMenu(viewer);
+                    }
                 });
             } catch (Exception e) {
-                Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> {
+                Threads.sync(() -> {
                     isLoading = false;
                     if (viewer.isOnline()) {
                         viewer.sendMessage(CC.t("&cError loading trade history. Please try again."));

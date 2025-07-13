@@ -27,9 +27,9 @@ public final class Threads {
 	public void init() {
 		final int databaseThreads = Math.max(Bukkit.getMaxPlayers() / 30, 1);
 		databaseExecutor = Executors.newFixedThreadPool(databaseThreads,
-				new ThreadFactoryBuilder().setNameFormat("Frost Database Thread %d").build());
+				new ThreadFactoryBuilder().setNameFormat("Tausch Database Thread %d").build());
 		scheduledExecutor = Executors.newScheduledThreadPool(4,
-				new ThreadFactoryBuilder().setNameFormat("Frost Scheduler Thread %d").build());
+				new ThreadFactoryBuilder().setNameFormat("Tausch Scheduler Thread %d").build());
 	}
 
 	public void ensureMain(Runnable runnable) {
