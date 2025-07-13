@@ -2,6 +2,7 @@ package me.portmapping.trading.task;
 
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.model.TradeSession;
+import me.portmapping.trading.utils.Threads;
 import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -23,7 +24,7 @@ public class TradeRunnable extends BukkitRunnable {
             if (countdown > 1) {
                 session.setCountdown(countdown - 1);
 
-                Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> session.reopenMenus());
+                Threads.sync(session::reopenMenus);
             }
         }
     }

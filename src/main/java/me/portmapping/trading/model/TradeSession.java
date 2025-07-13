@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.ui.user.TradeMenu;
+import me.portmapping.trading.utils.Threads;
 import me.portmapping.trading.utils.chat.Language;
 import me.portmapping.trading.utils.item.InventoryUtil;
 import me.portmapping.trading.utils.item.ItemUtil;
@@ -147,8 +148,7 @@ public class TradeSession {
 
 
         Document tradeDoc = toBson();
-        Bukkit.getScheduler().runTaskAsynchronously(Tausch.getInstance(), () ->
-                Tausch.getInstance().getMongoHandler().getTradeHistory().insertOne(tradeDoc));
+        Threads.async(() -> Tausch.getInstance().getMongoHandler().getTradeHistory().insertOne(tradeDoc));
 
         Tausch.getInstance().getTradeManager().getActiveTrades().remove(sender);
         Tausch.getInstance().getTradeManager().getActiveTrades().remove(target);
