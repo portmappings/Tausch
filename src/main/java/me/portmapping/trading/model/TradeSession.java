@@ -5,7 +5,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.ui.user.TradeMenu;
-import me.portmapping.trading.utils.chat.CC;
 import me.portmapping.trading.utils.chat.Language;
 import me.portmapping.trading.utils.item.InventoryUtil;
 import me.portmapping.trading.utils.item.ItemUtil;
@@ -96,21 +95,19 @@ public class TradeSession {
         return false;
     }
 
-    public boolean canConfirm() {
-        return countdown <= 1;
-    }
+
 
     public boolean isCompleted() {
         return completedAt > 0L;
     }
 
-    public boolean completeTrade() {
+    public void completeTrade() {
         Player senderPlayer = Bukkit.getPlayer(sender);
         Player targetPlayer = Bukkit.getPlayer(target);
 
         if (senderPlayer == null || targetPlayer == null) {
             cancelTrade();
-            return false;
+            return;
         }
 
         if (!InventoryUtil.hasInventorySpace(senderPlayer, targetItems) ||
@@ -119,7 +116,7 @@ public class TradeSession {
             senderPlayer.sendMessage(spaceMessage);
             targetPlayer.sendMessage(spaceMessage);
             reopenMenus();
-            return false;
+            return;
         }
 
         Bukkit.getScheduler().runTask(Tausch.getInstance(), () -> {
@@ -148,7 +145,6 @@ public class TradeSession {
             targetPlayer.closeInventory();
         });
 
-        return true;
     }
 
     private void sendTradeCompletionMessage(Player player, List<ItemStack> receivedItems, List<ItemStack> givenItems) {
@@ -180,7 +176,7 @@ public class TradeSession {
     }
 
     private String getItemDisplayName(ItemStack item) {
-        if (item.hasItemMeta() && item.getItemMeta().hasDisplayName()) {
+        if (item.hasItemMeta() && Objects.requireNonNull(item.getItemMeta()).hasDisplayName()) {
             return item.getItemMeta().getDisplayName();
         }
         String materialName = item.getType().name().toLowerCase().replace('_', ' ');
@@ -216,10 +212,8 @@ public class TradeSession {
         countdown = 4;
     }
 
-    @Deprecated
-    public void cancel() {
-        clearTradeData();
-    }
+
+
 
     public Document toBson() {
         return new Document()

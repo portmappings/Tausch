@@ -55,7 +55,7 @@ public class TradeManager {
 
         TradeSession session = activeTrades.remove(playerId);
         if (session != null) {
-            session.cancel();
+            session.cancelTrade();
             activeTrades.remove(session.getOther(player));
         }
     }

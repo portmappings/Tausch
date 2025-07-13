@@ -16,11 +16,9 @@ import java.util.UUID;
 
 public class InputButton extends Button {
     private final TradeSession session;
-    private final Player player;
 
-    public InputButton(TradeSession session, Player player) {
+    public InputButton(TradeSession session) {
         this.session = session;
-        this.player = player;
     }
 
     @Override

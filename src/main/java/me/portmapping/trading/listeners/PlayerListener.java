@@ -3,7 +3,6 @@ package me.portmapping.trading.listeners;
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.model.TradeSession;
 import me.portmapping.trading.ui.user.TradeMenu;
-import me.portmapping.trading.utils.chat.CC;
 import me.portmapping.trading.utils.chat.Language;
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;

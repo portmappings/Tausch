@@ -96,7 +96,7 @@ public class TradeMenu extends Menu {
 
 
     private void addInputButton(Map<Integer, Button> buttons, Player player) {
-        buttons.put(INPUT_SLOT, new InputButton(tradeSession, player));
+        buttons.put(INPUT_SLOT, new InputButton(tradeSession));
     }
 
     private void addConfirmationStatusButton(Map<Integer, Button> buttons, Player player) {
