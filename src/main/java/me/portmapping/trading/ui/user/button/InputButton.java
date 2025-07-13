@@ -2,6 +2,7 @@ package me.portmapping.trading.ui.user.button;
 
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.model.TradeSession;
+import me.portmapping.trading.utils.chat.Language;
 import me.portmapping.trading.utils.config.ConfigCursor;
 import me.portmapping.trading.utils.item.ItemBuilder;
 import me.portmapping.trading.utils.menu.Button;
@@ -212,7 +213,7 @@ public class InputButton extends Button {
         boolean fits = canReceiveAfterTrade(player, myItems, otherItems);
 
         if (!dropMode && !fits) {
-            player.sendMessage("§cYou don't have enough space to receive the trade items.");
+            player.sendMessage(Language.INVENTORY_FULL);
             player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1F, 1F);
             return;
         }
