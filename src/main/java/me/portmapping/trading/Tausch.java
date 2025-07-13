@@ -5,6 +5,7 @@ import lombok.Getter;
 import me.portmapping.trading.database.MongoHandler;
 import me.portmapping.trading.listeners.PlayerListener;
 import me.portmapping.trading.manager.CommandManager;
+import me.portmapping.trading.manager.ProfileManager;
 import me.portmapping.trading.manager.TradeManager;
 import me.portmapping.trading.utils.chat.Language;
 import me.portmapping.trading.utils.config.FileConfig;
@@ -23,9 +24,11 @@ public final class Tausch extends JavaPlugin {
     private FileConfig messagesConfig;
     private FileConfig menusConfig;
 
+    private MongoHandler mongoHandler;
     private CommandManager commandManager;
     private TradeManager tradeManager;
-    private MongoHandler mongoHandler;
+    private ProfileManager profileManager;
+
     @Override
     public void onEnable() {
         instance = this;
@@ -37,6 +40,7 @@ public final class Tausch extends JavaPlugin {
         this.mongoHandler = new MongoHandler(this);
         this.commandManager = new CommandManager(this);
         this.tradeManager = new TradeManager(this);
+        this.profileManager = new ProfileManager(this);
 
 
         this.getServer().getPluginManager().registerEvents(new ButtonListener(), this);

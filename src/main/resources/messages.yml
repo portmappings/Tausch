@@ -16,6 +16,10 @@ messages:
     request_declined: "&cYou declined the trade request."
     items_full: "&cYou cannot add more items."
     inventory_full: "&cYour inventory is full."
+    ignore_on: "&aYou are now ignoring trade requests."
+    ignore_off: "&cYou are no longer ignoring trade requests."
+    target_ignoring: "&cThat player is ignoring trade requests."
+    profile_not_found: "&cProfile not found. Please relog or contact an admin."
 
 hover:
   trade:

@@ -13,6 +13,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -126,6 +127,13 @@ public class PlayerListener implements Listener {
         TradeSession session = Tausch.getInstance().getTradeManager().getActiveSession(player);
         if (session == null || session.isCompleted()) return;
         event.setCancelled(true);
+    }
+
+    @EventHandler
+    public void onJoin(PlayerJoinEvent event){
+        Player player = event.getPlayer();
+        //Create player profile on join
+        Tausch.getInstance().getProfileManager().getProfile(player.getUniqueId());
     }
 
 }

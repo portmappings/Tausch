@@ -2,9 +2,11 @@ package me.portmapping.trading.manager;
 
 import lombok.Getter;
 import me.portmapping.trading.Tausch;
+import me.portmapping.trading.model.Profile;
 import me.portmapping.trading.model.TradeSession;
 import me.portmapping.trading.task.TradeRunnable;
 import me.portmapping.trading.ui.user.TradeMenu;
+import me.portmapping.trading.utils.chat.Language;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -13,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class TradeManager {
     private final Tausch instance;
+
     public TradeManager(Tausch instance){
         this.instance = instance;
         new TradeRunnable().runTaskTimerAsynchronously(instance, 0L, 22L);
@@ -22,12 +25,24 @@ public class TradeManager {
     private final Map<UUID, TradeSession> activeTrades = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> pendingRequests = new ConcurrentHashMap<>();
 
-    public boolean sendTradeRequest(Player sender, Player target) {
-        if (sender.equals(target)) return false;
-        if (hasPendingRequest(target)) return false;
+    public enum TradeRequestResult {
+        SUCCESS,
+        TARGET_IGNORING,
+        ALREADY_HAS_PENDING_REQUEST,
+        SELF_REQUEST
+    }
+
+    public TradeRequestResult sendTradeRequest(Player sender, Player target) {
+        if (sender.equals(target)) return TradeRequestResult.SELF_REQUEST;
+        if (hasPendingRequest(target)) return TradeRequestResult.ALREADY_HAS_PENDING_REQUEST;
+
+        Profile targetProfile = instance.getProfileManager().getProfile(target.getUniqueId());
+        if (targetProfile != null && targetProfile.isIgnoreTrades()) {
+            return TradeRequestResult.TARGET_IGNORING;
+        }
 
         pendingRequests.put(target.getUniqueId(), sender.getUniqueId());
-        return true;
+        return TradeRequestResult.SUCCESS;
     }
 
     public boolean acceptTradeRequest(Player target) {
@@ -63,6 +78,7 @@ public class TradeManager {
     public TradeSession getActiveSession(Player player) {
         return activeTrades.get(player.getUniqueId());
     }
+
     public boolean hasPendingRequest(Player player) {
         return pendingRequests.containsKey(player.getUniqueId());
     }
