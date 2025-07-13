@@ -3,6 +3,7 @@ package me.portmapping.trading.manager;
 import me.portmapping.trading.Tausch;
 import me.portmapping.trading.commands.admin.TradeHistoryCommand;
 import me.portmapping.trading.commands.exceptions.CommandExceptionHandler;
+import me.portmapping.trading.commands.user.TauschCommand;
 import me.portmapping.trading.commands.user.TradeCommand;
 import org.bukkit.entity.Player;
 import revxrsal.commands.bukkit.BukkitCommandHandler;
@@ -31,7 +32,7 @@ public class CommandManager {
 	}
 
 	private void register() {
-		handler.register(new Tausch());
+		handler.register(new TauschCommand());
 		handler.register(new TradeCommand());
 		handler.register(new TradeHistoryCommand());
 
