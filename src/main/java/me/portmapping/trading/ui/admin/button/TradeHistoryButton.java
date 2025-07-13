@@ -9,6 +9,7 @@ import me.portmapping.trading.utils.item.ItemBuilder;
 import me.portmapping.trading.utils.menu.Button;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
@@ -36,7 +37,7 @@ public class TradeHistoryButton extends Button {
     @Override
     public ItemStack getButtonItem(Player player) {
         UUID otherPlayerId = tradeSession.getOther(viewingPlayerId);
-        Player otherPlayer = Bukkit.getPlayer(otherPlayerId);
+        OfflinePlayer otherPlayer = Bukkit.getOfflinePlayer(otherPlayerId);
         String otherName = otherPlayer != null ? otherPlayer.getName() : "Unknown";
         boolean isViewer = viewingPlayerId.equals(player.getUniqueId());
         List<ItemStack> viewerItems = tradeSession.getPlayerItems(viewingPlayerId);

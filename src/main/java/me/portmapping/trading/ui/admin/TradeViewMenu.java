@@ -11,6 +11,7 @@ import me.portmapping.trading.utils.menu.Button;
 import me.portmapping.trading.utils.menu.Menu;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
@@ -38,7 +39,7 @@ public class TradeViewMenu extends Menu {
     @Override
     public String getTitle(Player player) {
         UUID otherPlayerId = tradeSession.getOther(viewingPlayerId);
-        Player otherPlayer = Bukkit.getPlayer(otherPlayerId);
+        OfflinePlayer otherPlayer = Bukkit.getOfflinePlayer(otherPlayerId);
         String otherName = otherPlayer != null ? otherPlayer.getName() : "Unknown";
         String template = CURSOR.getString("title") == null ? "&8Trade View: &7{other}" : CURSOR.getString("title");
         return CC.t(template.replace("{other}", otherName));
@@ -99,9 +100,9 @@ public class TradeViewMenu extends Menu {
 
     private void addInfoButton(Map<Integer, Button> buttons) {
         UUID otherPlayerId = tradeSession.getOther(viewingPlayerId);
-        Player otherPlayer = Bukkit.getPlayer(otherPlayerId);
+        OfflinePlayer otherPlayer = Bukkit.getOfflinePlayer(otherPlayerId);
         String otherName = otherPlayer != null ? otherPlayer.getName() : "Unknown";
-        Player viewingPlayer = Bukkit.getPlayer(viewingPlayerId);
+        OfflinePlayer viewingPlayer = Bukkit.getOfflinePlayer(viewingPlayerId);
         String viewingName = viewingPlayer != null ? viewingPlayer.getName() : "Unknown";
         String matName = INFO_CURSOR.getString("material");
         Material material = matName == null ? Material.BOOK : Material.valueOf(matName.toUpperCase());
@@ -161,7 +162,7 @@ public class TradeViewMenu extends Menu {
             if (isViewerItem) offeredBy = player.getName();
             else {
                 UUID otherId = tradeSession.getOther(viewingPlayerId);
-                Player other = Bukkit.getPlayer(otherId);
+                OfflinePlayer other = Bukkit.getOfflinePlayer(otherId);
                 offeredBy = other != null ? other.getName() : "Unknown";
             }
             return new ItemBuilder(item.clone()).addToLore("").addToLore("&7Offered by: &f" + offeredBy).build();

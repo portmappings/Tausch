@@ -18,6 +18,7 @@ import me.portmapping.trading.utils.menu.pagination.PaginatedMenu;
 import org.bson.Document;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
 import java.util.*;
@@ -36,7 +37,7 @@ public class TradeHistoryMenu extends PaginatedMenu {
 
     @Override
     public String getPrePaginatedTitle(Player player) {
-        Player targetPlayer = Bukkit.getPlayer(targetPlayerId);
+        OfflinePlayer targetPlayer = Bukkit.getOfflinePlayer(targetPlayerId);
         String targetName = targetPlayer != null ? targetPlayer.getName() : "Unknown";
         String template = CURSOR.getString("title") == null ? "&8Trade History: &7{target}" : CURSOR.getString("title");
         return CC.t(template.replace("{target}", targetName));
